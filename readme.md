@@ -57,11 +57,14 @@ graph TD
     A[Next.js - Frontend] -->|HTTP/JSON| B[BFF]
     B -->|HTTP/JSON| C[Go Backend - REST API]
     C --> D[PostgreSQL]
+    E[API Gateway] -->|HTTP/JSON| B
+    E -->|HTTP/JSON| C
 ```
 
 - **Frontend**: Next.js (App Router)
 - **BFF**: Backend for Frontend, intermediário entre o Next.js e o backend principal
 - **Backend**: Go (REST API)
+- **API Gateway**: Camada de roteamento e abstração para comunicação entre serviços
 - **Banco**: PostgreSQL
 - **Comunicação**: HTTP/JSON
 
@@ -92,6 +95,13 @@ graph TD
 - Logs: zap ou zerolog
 - Docker & Docker Compose
 
+### API Gateway
+
+- Go 1.22+
+- gorilla/mux (roteamento)
+- Docker & Docker Compose
+- Configuração centralizada de rotas
+
 ---
 
 ## 📁 Estrutura do Repositório
@@ -100,7 +110,9 @@ graph TD
 .
 ├─ frontend/ # Aplicação Next.js
 ├─ backend/  # API em Golang
-├─ infra/    # Docker compose, scripts, configs
+├─ bff/      # Backend for Frontend
+├─ api-gateway/ # API Gateway
+├─ docs/     # Documentação
 └─ README.md
 ```
 
@@ -223,6 +235,7 @@ Middleware no Next para proteção de rotas privadas
   - PostgreSQL
   - Backend Go
   - Frontend Next
+  - API Gateway
 - Variáveis de ambiente centralizadas
 - Pronto para rodar localmente com um comando:
 
@@ -242,7 +255,8 @@ docker-compose up -d
 6. Formulários via Server Actions
 7. Testes unit e integration
 8. Testes E2E
-9. Polish visual e README final
+9. Adicionar API Gateway
+10. Polish visual e README final
 
 ---
 
