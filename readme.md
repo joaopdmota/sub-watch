@@ -40,7 +40,7 @@ Este projeto foi criado como desafio técnico pessoal e portfólio profissional,
 
 ```
 ┌─────────────┐ HTTP/JSON ┌──────────────┐
-│   Next.js   │ ─────────▶ │ Go Backend   │
+│   Next.js   │ ─────────▶ │ Go Backend  │
 │ (Frontend)  │           │   REST API   │
 └─────────────┘           └───────┬──────┘
                                    │
@@ -53,10 +53,10 @@ Este projeto foi criado como desafio técnico pessoal e portfólio profissional,
 ### Representação em Mermaid
 
 ```mermaid
-graph TD;
-    A[Next.js (Frontend)] -->|"HTTP/JSON"| B[BFF];
-    B -->|"HTTP/JSON"| C[Go Backend (REST API)];
-    C --> D[PostgreSQL];
+graph TD
+    A[Next.js - Frontend] -->|HTTP/JSON| B[BFF]
+    B -->|HTTP/JSON| C[Go Backend - REST API]
+    C --> D[PostgreSQL]
 ```
 
 - **Frontend**: Next.js (App Router)
