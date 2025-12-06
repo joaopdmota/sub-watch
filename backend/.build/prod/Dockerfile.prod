@@ -1,0 +1,18 @@
+FROM golang:1.23 AS build
+
+RUN apt-get update && apt-get install -y ca-certificates
+
+ARG WEATHER_API_KEY
+ARG API_PORT
+
+WORKDIR /app
+COPY . . 
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./cmd/server/main.go  
+
+FROM scratch
+
+WORKDIR /app
+COPY --from=build /app/main .
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
+ENTRYPOINT [ "./main" ]

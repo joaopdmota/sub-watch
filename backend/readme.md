@@ -1,134 +1,84 @@
-Este repositório contém uma configuração do Docker Compose para executar um coletor OpenTelemetry, um servidor Zipkin e um servidor de aplicação localmente. Abaixo você encontra uma descrição de cada serviço, suas funcionalidades e como utilizá-los.
+# Sub-Watch Backend
 
-## Serviços
+Este repositório contém a implementação do backend do serviço `sub-watch`. O projeto fornece uma estrutura robusta para o desenvolvimento de serviços em Go, incluindo configurações pré-definidas para observabilidade, containerização e desenvolvimento local.
+
+## Funcionalidades Principais
+
+- **Servidor Web**: Construído sobre o framework [Echo](https://echo.labstack.com/), oferecendo alta performance e facilidade de extensão.
+- **Observabilidade (OpenTelemetry)**: Integração nativa para coleta de métricas e traces, garantindo visibilidade sobre o comportamento da aplicação.
+- **Tracing Distribuído**: Configuração pronta para envio de traces ao Zipkin/Jaeger via OpenTelemetry Collector.
+- **Ambiente de Desenvolvimento**: 
+  - Docker Compose para orquestração de serviços locais.
+  - Suporte a Hot Reload utilizando [Air](https://github.com/cosmtrek/air) (configurado no Dockerfile de dev).
+
+---
+
+## Estrutura de Serviços (Docker Compose)
+
+O ambiente local é composto pelos seguintes serviços definidos no `compose.yaml`:
 
 ### 1. **otel-collector**
-O OpenTelemetry Collector é responsável por coletar, processar e exportar dados de telemetria, como métricas e traces.
+O OpenTelemetry Collector é responsável por receber, processar e exportar dados de telemetria (métricas e traces) da aplicação.
 
-- **Imagem utilizada**: `otel/opentelemetry-collector-contrib`
-- **Volumes**:
-  - `./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml`: Mapeia o arquivo de configuração do coletor.
-- **Portas expostas**:
-  - `1888`: Para consultas de dados de métricas.
-  - `8888`: Porta para o endpoint de debug.
-  - `8889`: Endpoint de verificação de estado.
+- **Imagem**: `otel/opentelemetry-collector-contrib`
+- **Portas e Protocolos**:
+  - `4317`: OTLP gRPC (Recebimento de dados da aplicação).
+  - `4318`: OTLP HTTP.
+  - `1888`: Métricas internas do collector.
+  - `8888`: Porta de métricas para Prometheus (se configurado).
   - `13133`: Health Check.
-  - `4317`: Protocolo OTLP gRPC.
-  - `4318`: Protocolo OTLP HTTP.
-  - `55679`: Porta legacy para OTLP.
-- **Dependências**: O serviço depende do `zipkin` para funcionar corretamente.
-- **Rede**: Conectado à rede `app_network`.
-
----
+  - `55679`: Z-Pages (Debug legacy).
+- **Configuração**: Mapeia o arquivo `./otel-collector-config.yaml` para `/etc/otelcol-contrib/config.yaml`.
+- **Dependências**: Aguarda o início do serviço `zipkin`.
 
 ### 2. **zipkin**
-O Zipkin é uma ferramenta de rastreamento distribuído que ajuda a depurar sistemas distribuídos.
+Serviço de armazenamento e visualização de traces distribuídos. Útil para depurar latência e fluxo de requisições.
 
-- **Imagem utilizada**: `openzipkin/zipkin`
-- **Portas expostas**:
-  - `9411`: Interface web do Zipkin.
-- **Variáveis de ambiente**:
-  - `STORAGE_TYPE=mem`: Armazena os dados na memória.
-  - `ZIPKIN_HTTP_ENABLED=true`: Habilita o servidor HTTP do Zipkin.
-  - `ZIPKIN_HTTP_PORT=9411`: Define a porta HTTP do Zipkin.
-- **Rede**: Conectado à rede `app_network`.
-
----
+- **Imagem**: `openzipkin/zipkin`
+- **Interface Web**: Acessível em `http://localhost:9411`.
+- **Armazenamento**: Configurado para `MEM` (em memória), ou seja, os dados são perdidos ao reiniciar o container.
 
 ### 3. **server**
-Este é o servidor da aplicação, configurado para rodar localmente com suporte a hot reload via [Air](https://github.com/cosmtrek/air).
+O serviço principal da aplicação backend.
 
-- **Build**:
-  - **Contexto**: Diretório atual (`.`).
-  - **Dockerfile**: `Dockerfile.dev`.
-- **Portas expostas**:
-  - `8080`: Porta principal da aplicação.
-  - `8081`: Porta auxiliar (caso utilizada).
-- **Variáveis de ambiente**:
-  - Carregadas do arquivo `.env`.
-- **Volumes**:
-  - `.:/app`: Mapeia o diretório do projeto para o container.
-  - `/app/tmp`: Cria um volume temporário no container.
-- **Comando**:
-  - `air`: Realiza o hot reload durante o desenvolvimento.
-- **Rede**: Conectado à rede `app_network`.
-
----
-
-## Rede
-
-- **app_network**:
-  - Tipo: `bridge`
-  - Responsável por conectar os serviços no mesmo ambiente de rede.
+- **Porta**: `8080` (Acessível via `http://localhost:8080`).
+- **Desenvolvimento**:
+  - Mapeia o diretório atual (`.`) para dentro do container, permitindo edição de código em tempo real.
+  - Utiliza `air` para recompilar e reiniciar a aplicação automaticamente ao detectar mudanças nos arquivos.
+- **Variáveis de Ambiente**: Carregadas a partir do arquivo `.env`.
 
 ---
 
 ## Como Utilizar
 
-1. Certifique-se de ter o [Docker](https://www.docker.com/) e o [Docker Compose](https://docs.docker.com/compose/) instalados no seu ambiente.
-2. Crie o arquivo de configuração do OpenTelemetry Collector (`otel-collector-config.yaml`) na raiz do projeto.
-3. Crie um arquivo `.env` basedo no arquivo `.env.example` com as variáveis necessárias para o serviço `server`.
-4. Execute o comando abaixo para subir os serviços:
+### Pré-requisitos
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [Go 1.23+](https://go.dev/dl/) (Opcional, caso queira rodar fora do Docker)
+
+### Passo a Passo
+
+1. **Configuração de Ambiente**:
+   Crie um arquivo `.env` na raiz do projeto com base no `.env.example` (se houver) ou definindo as variáveis necessárias (ex: `API_PORT=8080`).
+
+2. **Configuração do Collector**:
+   Garanta que o arquivo `otel-collector-config.yaml` esteja presente na raiz e configurado corretamente.
+
+3. **Iniciando os Serviços**:
+   Execute o comando abaixo para construir as imagens e subir o ambiente:
    ```bash
    docker-compose up --build
    ```
 
-# Sistema de Consulta de Clima por CEP
+4. **Acessando a Aplicação**:
+   - API: `http://localhost:8080`
+   - Zipkin (Traces): `http://localhost:9411`
 
-Este projeto tem como objetivo desenvolver um sistema em Go que recebe um CEP, identifica a cidade correspondente e retorna as temperaturas atuais em três unidades de medida: Celsius, Fahrenheit e Kelvin.
+## Estrutura do Projeto
 
-## Funcionalidade
+O projeto segue uma organização modular (Clean Architecture / Hexagonal):
 
-O sistema possui as seguintes funcionalidades:
-
-- **Receber um CEP válido de 8 dígitos**
-- **Pesquisar a localização correspondente ao CEP utilizando a API ViaCEP**
-- **Consultar a temperatura atual utilizando a API WeatherAPI**
-- **Retornar a temperatura em Celsius, Fahrenheit e Kelvin**
-- **Responder adequadamente nos seguintes cenários:**
-
-### Respostas de Sucesso
-- **Código HTTP:** 200
-- **Response Body:**
-```json
-{
-  "temp_C": 28.5,
-  "temp_F": 83.3,
-  "temp_K": 301.65
-}
-```
-
-### Respostas de Erro
-
-### CEP inválido (formato incorreto):
-- **Código HTTP:** 422
-- **Mensagem:** `invalid zipcode`
-
-### CEP não encontrado:
-- **Código HTTP:** 404
-- **Mensagem:** `can not find zipcode`
-
-## Requisitos
-
-- O sistema deve validar o formato do CEP e garantir que seja um número válido de 8 dígitos.
-- O sistema deve integrar com as APIs ViaCEP e WeatherAPI para obter as informações necessárias.
-
-## Fórmulas de Conversão
-
-### Celsius para Fahrenheit:
-\[
-F = C * 1.8 + 32
-\]
-
-### Celsius para Kelvin:
-\[
-K = C + 273
-\]
-
-## Tecnologias Utilizadas
-
-- **Linguagem:** Go
-- **APIs:**
-  - ViaCEP (https://viacep.com.br/)
-  - WeatherAPI (https://www.weatherapi.com/)
-- **Docker:** Para containerização da aplicação
+- `cmd/server`: Ponto de entrada da aplicação (Main).
+- `application`: Lógica de negócios (Use Cases) e regras da aplicação.
+- `infra`: Implementações técnicas (HTTP Server, Logs, OTel, Banco de Dados).
+- `otel-collector-config.yaml`: Configuração do pipeline de observabilidade.
