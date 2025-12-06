@@ -54,11 +54,13 @@ Este projeto foi criado como desafio técnico pessoal e portfólio profissional,
 
 ```mermaid
 graph TD;
-    A[Next.js (Frontend)] -->|HTTP/JSON| B[Go Backend (REST API)];
-    B --> C[PostgreSQL];
+    A[Next.js (Frontend)] -->|"HTTP/JSON"| B[BFF];
+    B -->|"HTTP/JSON"| C[Go Backend (REST API)];
+    C --> D[PostgreSQL];
 ```
 
 - **Frontend**: Next.js (App Router)
+- **BFF**: Backend for Frontend, intermediário entre o Next.js e o backend principal
 - **Backend**: Go (REST API)
 - **Banco**: PostgreSQL
 - **Comunicação**: HTTP/JSON
