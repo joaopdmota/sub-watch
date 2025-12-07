@@ -7,12 +7,10 @@ import (
 )
 
 func setupEnvVars() {
-	os.Setenv("WEATHER_API_KEY", "test-api-key")
 	os.Setenv("API_PORT", "8080")
 }
 
 func clearEnvVars() {
-	os.Unsetenv("WEATHER_API_KEY")
 	os.Unsetenv("API_PORT")
 }
 

@@ -1,3 +1,7 @@
+-include .env
+IMAGE_NAME ?= $(SERVICE_NAME)
+DOCKERFILE ?= .build/prod/Dockerfile.prod
+
 .PHONY: build
 build:
 	@echo "Building..."
@@ -46,13 +50,13 @@ run:
 .PHONY: build-docker
 build-docker:
 	@echo "Running build..."
-	docker build --build-arg WEATHER_API_KEY=$(WEATHER_API_KEY) --build-arg API_PORT=$(API_PORT) -f $(DOCKERFILE) -t $(IMAGE_NAME) . --no-cache
+	docker build --build-arg API_PORT=$(API_PORT) -f $(DOCKERFILE) -t $(IMAGE_NAME) . --no-cache
 	@echo "Build completed."
 
 .PHONY: run-docker-build
 run-docker-build:
 	@echo "Running app..."
-	docker run -e WEATHER_API_KEY=$(WEATHER_API_KEY) -e API_PORT=$(API_PORT) -p $(API_PORT):$(API_PORT) cep_weather
+	docker run --env-file .env -p $(API_PORT):$(API_PORT) $(IMAGE_NAME)
 
 .PHONE: push
 push: build-docker
@@ -71,3 +75,43 @@ server-logs:
 	@echo "Tailing server logs..."
 	docker compose logs -f server
 	@echo "Logs streaming stopped."
+
+.PHONY: psql
+psql:
+	@echo "Connecting to database..."
+	docker compose exec postgres psql -U $(DB_USER) -d $(DB_NAME)
+
+.PHONY: migrate-up
+migrate-up:
+	@echo "Running migrations..."
+	@for file in infra/database/migrations/*.up.sql; do \
+		echo "Applying $$file..."; \
+		cat $$file | docker compose exec -T postgres psql -U $(DB_USER) -d $(DB_NAME); \
+	done
+	@echo "Migrations finished."
+
+.PHONY: migrate-down
+migrate-down:
+	@echo "Running migrations..."
+	@for file in infra/database/migrations/*.down.sql; do \
+		echo "Applying $$file..."; \
+		cat $$file | docker compose exec -T postgres psql -U $(DB_USER) -d $(DB_NAME); \
+	done
+	@echo "Migrations finished."
+
+.PHONY: seed
+seed:
+	@echo "Seeding database..."
+	@for file in infra/database/seeds/*.sql; do \
+		echo "Applying $$file..."; \
+		cat $$file | docker compose exec -T postgres psql -U $(DB_USER) -d $(DB_NAME); \
+	done
+	@echo "Seeding finished."
+
+.PHONY: docs
+docs:
+	@echo "Generating Swagger documentation..."
+	@~/go/bin/swag init -g cmd/server/main.go --output docs
+	@sed -i '' '/LeftDelim:/d' docs/docs.go
+	@sed -i '' '/RightDelim:/d' docs/docs.go
+	@echo "Swagger docs generated at docs/"

@@ -3,22 +3,23 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"sub-watch/application"
 	"sub-watch/application/config"
-	server "sub-watch/infra/http/router"
 	"sub-watch/infra/otel"
 
-	"go.opentelemetry.io/otel/trace"
+	_ "sub-watch/docs"
 )
 
-var tracer trace.Tracer
-
+// @title Sub-Watch API
+// @version 1.0
+// @description Backend API for Sub-Watch application.
+// @host localhost:8080
+// @BasePath /
 func main() {
 	envs := config.LoadEnvs()
-	application.InitializeDependencies()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -33,10 +34,10 @@ func main() {
 		}
 	}()
 
-	httpService := server.NewHTTPService(strconv.Itoa(envs.ApiPort))
+	httpService := application.InitializeDependencies(envs)
 
 	go func() {
-		if err := httpService.Start(); err != nil {
+		if err := httpService.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Erro ao iniciar o servidor: %v", err)
 		}
 	}()

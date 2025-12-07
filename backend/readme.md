@@ -74,11 +74,126 @@ O serviço principal da aplicação backend.
    - API: `http://localhost:8080`
    - Zipkin (Traces): `http://localhost:9411`
 
-## Estrutura do Projeto
+## Arquitetura do Backend
 
-O projeto segue uma organização modular (Clean Architecture / Hexagonal):
+O projeto segue os princípios de **Clean Architecture** (Arquitetura Limpa), garantindo separação de responsabilidades, testabilidade e independência de frameworks externos.
 
-- `cmd/server`: Ponto de entrada da aplicação (Main).
-- `application`: Lógica de negócios (Use Cases) e regras da aplicação.
-- `infra`: Implementações técnicas (HTTP Server, Logs, OTel, Banco de Dados).
-- `otel-collector-config.yaml`: Configuração do pipeline de observabilidade.
+### Estrutura de Camadas
+
+```
+backend/
+├── cmd/                    # Camada de Entrada
+│   └── server/            # Ponto de inicialização da aplicação
+├── application/           # Camada de Aplicação (Regras de Negócio)
+│   ├── domain/           # Entidades de Domínio (User, Subscription, etc.)
+│   ├── services/         # Serviços de Aplicação (orquestração)
+│   ├── usecases/         # Casos de Uso (ações específicas)
+│   ├── config/           # Configurações da aplicação
+│   └── dependencies.go   # Injeção de Dependências
+├── infra/                # Camada de Infraestrutura (Detalhes Técnicos)
+│   ├── database/         # Adaptadores de Banco de Dados
+│   ├── http/             # Servidor HTTP, Handlers, Middlewares
+│   ├── repositories/     # Implementações de Repositórios
+│   └── otel/             # Observabilidade (OpenTelemetry)
+├── docs/                 # Documentação Swagger/OpenAPI (auto-gerada)
+└── api/                  # Exemplos de requisições HTTP (.http files)
+```
+
+### Camadas e Responsabilidades
+
+#### 1. **Domain (Domínio)**
+- **Localização**: `application/domain/`
+- **Responsabilidade**: Define as entidades principais do sistema (ex: `User`, `Subscription`, `PaymentMethod`)
+- **Características**:
+  - Sem dependências externas
+  - Modelos de dados puros (structs Go)
+  - Representa conceitos de negócio
+
+#### 2. **Use Cases (Casos de Uso)**
+- **Localização**: `application/usecases/`
+- **Responsabilidade**: Implementa regras de negócio específicas (ex: `ListUsersUseCase`, `GetUserUseCase`)
+- **Características**:
+  - Orquestra fluxos de dados
+  - Depende de `Services` (não de detalhes técnicos)
+  - Retorna DTOs (`UserOutput`) ao invés de entidades diretas
+
+#### 3. **Services (Serviços de Aplicação)**
+- **Localização**: `application/services/`
+- **Responsabilidade**: Interface entre Use Cases e Repositories
+- **Características**:
+  - Define contratos (interfaces) para operações de dados
+  - Ex: `UserService.GetAllUsers()`, `UserService.GetUserByID()`
+  - Permite trocar implementações facilmente
+
+#### 4. **Repositories (Repositórios)**
+- **Localização**: `infra/repositories/`
+- **Responsabilidade**: Acesso a dados (comunicação com banco)
+- **Características**:
+  - Implementa interfaces definidas em `Services`
+  - Usa abstração `database.Database` (não SQL direto)
+  - Ex: `UserRepository.FindAll()`, `UserRepository.FindByID()`
+
+#### 5. **Database Adapters (Adaptadores de Banco)**
+- **Localização**: `infra/database/`
+- **Responsabilidade**: Abstrai operações de banco específicas (PostgreSQL)
+- **Características**:
+  - Interface `Database` com métodos genéricos (`FindAll`, `FindByID`)
+  - `PostgresAdapter` implementa essa interface
+  - Gera queries SQL internamente (repositórios não sabem que é SQL)
+
+#### 6. **HTTP Handlers**
+- **Localização**: `infra/http/handlers/`
+- **Responsabilidade**: Recebe requisições HTTP e delega para Use Cases
+- **Características**:
+  - Valida entrada
+  - Converte dados HTTP (JSON) para objetos Go
+  - Retorna respostas (status codes, erros)
+
+### Fluxo de uma Requisição (Exemplo: GET /users/123)
+
+```
+1. [HTTP Request] → Handler (GetUser)
+2. Handler extrai ID do parâmetro
+3. Handler chama → GetUserUseCase.Execute(ctx, id)
+4. UseCase chama → UserService.GetUserByID(ctx, id)
+5. Service delega → UserRepository.FindByID(ctx, id)
+6. Repository usa → Database.FindByID(ctx, "users", id)
+7. PostgresAdapter executa → SELECT * FROM users WHERE id = $1
+8. Dados retornam na ordem inversa até o Handler
+9. Handler retorna JSON → Cliente HTTP
+```
+
+### Princípios Aplicados
+
+- **Inversão de Dependências**: Camadas internas não conhecem as externas
+- **Abstração de Banco**: Repositories usam interface `Database`, não SQL direto
+- **Testabilidade**: Cada camada pode ser testada isoladamente com mocks
+- **Desacoplamento**: Trocar PostgreSQL por MongoDB afeta apenas `infra/database`
+
+### Injeção de Dependências
+
+O arquivo `application/dependencies.go` inicializa todas as dependências na ordem correta:
+
+```go
+Database → Repository → Service → UseCase → Handler → Router
+```
+
+## Documentação da API (Swagger)
+
+A API possui documentação interativa via Swagger/OpenAPI, acessível em:
+- **Swagger UI**: `http://localhost:8080/swagger/index.html`
+
+### Atualizando a Documentação
+
+Após adicionar ou modificar endpoints com anotações Swagger, regenere a documentação executando:
+
+```bash
+make docs
+```
+
+Este comando:
+1. Gera os arquivos de documentação em `docs/` com base nas anotações do código
+2. Remove campos incompatíveis automaticamente
+3. Permite que a interface Swagger reflita as mudanças mais recentes
+
+**Nota**: Certifique-se de que o `swag` CLI está instalado (`go install github.com/swaggo/swag/cmd/swag@latest`)
