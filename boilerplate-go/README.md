@@ -282,8 +282,6 @@ Depois é só instrumentar handlers/usecases com spans, se quiser.
 
 ## 🧰 Comandos úteis (Makefile)
 
-*(Ajuste conforme seu `Makefile`, mas a ideia geral é essa.)*
-
 ```bash
 make up            # Sobe server com Docker Compose
 make down          # Derruba containers
@@ -293,7 +291,3 @@ make test          # go test ./...
 ```
 
 ---
-
-## 📝 Licença
-
-Defina aqui a licença do projeto (ex.: MIT).
