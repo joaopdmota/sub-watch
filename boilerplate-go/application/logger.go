@@ -1,4 +1,4 @@
-package services
+package application
 
 type Logger interface {
     Info(msg string, kv ...any)

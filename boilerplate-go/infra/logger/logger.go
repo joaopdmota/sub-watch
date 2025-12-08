@@ -1,13 +1,13 @@
 package logger
 
 import (
-	"boilerplate-go/application/services"
+	"boilerplate-go/application"
 	"log/slog"
 	"os"
 )
 
 type SlogLogger struct {
-    logger services.Logger
+    logger application.Logger
 }
 
 func New() *SlogLogger {

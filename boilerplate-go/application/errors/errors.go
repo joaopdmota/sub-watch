@@ -1,4 +1,4 @@
-package application
+package app_errors
 
 const (
 	ERROR_UNKNOW               = "UNKNOW"

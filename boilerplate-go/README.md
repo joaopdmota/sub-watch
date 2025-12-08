@@ -7,7 +7,7 @@ Backend em Go pensado para você **subir uma API rápido** sem abrir mão de boa
 ## ✨ Funcionalidades
 
 - **Arquitetura limpa**  
-  - Separação clara entre `cmd`, `application`, `domain`, `infra` e `api`
+  - Separação clara entre `cmd`, `application`, `domain`, `infra` e `pkg`
   - Fácil de testar, manter e evoluir
 
 - **Servidor HTTP desacoplado**  
@@ -18,11 +18,17 @@ Backend em Go pensado para você **subir uma API rápido** sem abrir mão de boa
   - Leitura e validação de envs em `application/config/env.go`
 
 - **Logger estruturado**  
-  - Implementação com `slog` em `infra/logger`
-  - Interface `Logger` em `application/services` para manter o domínio desacoplado
+  - Interface de logger no domínio (ex.: via `pkg/logger`)
+  - Implementação concreta em `infra/logger` (quando aplicável)
+
+- **Providers reutilizáveis em `pkg/`**  
+  - `pkg/id`: geração de IDs (UUID)
+  - `pkg/hash`: hashing seguro de senha (bcrypt)
+  - `pkg/date`: provider de datas testável (`Now()` injetável)
+  - `pkg/logger`: abstração de logger reutilizável entre serviços
 
 - **OpenTelemetry pronto para uso (mas opcional)**  
-  - Integração em `infra/otel`
+  - Integração em `infra/otel` (quando configurado)
   - Controle via `OTEL_ENABLED`
   - Se o collector estiver fora do ar, a app **continua funcionando**
 
@@ -137,7 +143,7 @@ Você pode adicionar outras envs de domínio conforme for evoluindo o projeto (D
 
 ## 📁 Estrutura de Pastas
 
-Visão geral:
+Visão geral (adaptar para sua estrutura real de microserviço):
 
 ```text
 boilerplate-go/
@@ -145,32 +151,29 @@ boilerplate-go/
 │   ├── dev/
 │   │   └── Dockerfile.dev      # Ambiente de desenvolvimento (Air, Go, etc.)
 │   └── prod/                   # Dockerfiles de produção (a definir)
-├── api/                        # DTOs, contratos de entrada/saída, schemas
 ├── application/
 │   ├── config/
 │   │   ├── env.go              # Carregamento de envs
 │   │   └── env_test.go
 │   ├── domain/                 # Entidades e regras de negócio puras
-│   ├── services/
-│   │   └── logger.go           # Interface de logger
-│   └── usecases/
-│       ├── dependencies.go     # Composition root / injeção de dependências
-│       └── error.go            # Tipos de erro da aplicação
+│   └── usecases/               # Casos de uso da aplicação
 ├── cmd/
 │   └── server/
 │       └── main.go             # Entrypoint da API
-├── docs/                       # Documentação técnica (diagramas, notas, etc.)
 ├── infra/
 │   ├── http/
 │   │   ├── client/             # Clientes HTTP externos (se houver)
 │   │   ├── handlers/           # Handlers HTTP (camada de borda)
 │   │   ├── middlewares/        # Middlewares (logger, recovery, etc.)
-│   │   ├── router/             # Registro de rotas
 │   │   └── webserver/          # Server HTTP (start/stop, graceful shutdown)
-│   ├── logger/
-│   │   └── logger.go           # Implementação concreta do logger (slog)
-│   └── otel/
-│       └── otel.go             # Integração com OpenTelemetry
+│   ├── database/               # Interfaces e adapters de banco (ex.: PostgresAdapter)
+│   ├── logger/                 # Implementação concreta do logger
+│   └── otel/                   # Integração com OpenTelemetry
+├── pkg/
+│   ├── date/                   # Provider de datas (ex.: Now())
+│   ├── hash/                   # Hash de senha (bcrypt, etc.)
+│   ├── id/                     # Gerador de IDs (UUID)
+│   └── logger/                 # Abstrações de logger reutilizáveis
 ├── tmp/                        # Artefatos temporários (binário gerado pelo Air)
 ├── .air.toml                   # Configuração do Air (hot reload)
 ├── .env                        # Env local (não versionar)
@@ -186,8 +189,6 @@ boilerplate-go/
 
 ## 🔌 Fluxo de uma requisição (visão conceitual)
 
-Um fluxo típico de requisição HTTP na sua API pode ser:
-
 ```text
 1. [HTTP Request] → Handler em infra/http/handlers
 2. Handler:
@@ -196,11 +197,11 @@ Um fluxo típico de requisição HTTP na sua API pode ser:
 3. Handler chama → UseCase em application/usecases
 4. UseCase:
    - aplica regra de negócio
-   - chama interfaces de serviços/repos (definidas em application/services)
+   - chama interfaces de serviços/repos
 5. Implementações concretas em infra/* executam:
    - chamadas HTTP externas
    - acesso a banco de dados
-   - etc.
+   - logging, tracing, etc.
 6. UseCase retorna DTO de saída
 7. Handler converte para JSON → responde para o cliente
 ```
@@ -209,9 +210,9 @@ O domínio (`application/domain`) não conhece HTTP, banco, nem nada de infra.
 
 ---
 
-## 🧾 Logger
+## 🧾 Logger (via pkg/logger)
 
-Interface de logger em `application/services/logger.go`:
+Interface de logger no domínio (exemplo):
 
 ```go
 type Logger interface {
@@ -222,61 +223,20 @@ type Logger interface {
 }
 ```
 
-Implementação concreta com `slog` em `infra/logger/logger.go`:
-
-```go
-type SlogLogger struct {
-    l *slog.Logger
-}
-
-func New() *SlogLogger {
-    return &SlogLogger{
-        l: slog.New(slog.NewJSONHandler(os.Stdout, nil)),
-    }
-}
-
-func (s *SlogLogger) Info(msg string, kv ...any)  { s.l.Info(msg, kv...) }
-func (s *SlogLogger) Warn(msg string, kv ...any)  { s.l.Warn(msg, kv...) }
-func (s *SlogLogger) Error(msg string, kv ...any) { s.l.Error(msg, kv...) }
-func (s *SlogLogger) Debug(msg string, kv ...any) { s.l.Debug(msg, kv...) }
-```
-
-Isso permite:
-
-- **domínio e usecases** dependerem apenas da interface `Logger`;
-- trocar a implementação (slog → zap → zerolog) sem alterar regra de negócio.
+Implementações concretas podem viver em `infra/logger` e/ou `pkg/logger`, usando `slog`, `zap` etc., mantendo o domínio desacoplado.
 
 ---
 
 ## 📡 Observabilidade (OpenTelemetry)
 
-A integração com OTEL está em `infra/otel/otel.go`.
+Quando configurado, a integração com OTEL fica em `infra/otel`.
 
 Pontos chave:
 
-- Controlada por `OTEL_ENABLED`:
-  - `false` → não tenta conectar, só loga que está desabilitado
-  - `true` → tenta inicializar tracing
+- Controlada por `OTEL_ENABLED`
 - Se não conseguir conectar no collector:
   - loga o erro
-  - **não impede a aplicação de subir**  
-    (observabilidade é “best effort”, não requisito de vida ou morte)
-- Exemplo de uso no `main.go`:
-
-```go
-ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-defer stop()
-
-shutdownOtel := func() {}
-
-if envs.OtelEnabled {
-    shutdownOtel = otel.Init(ctx)
-}
-
-defer shutdownOtel()
-```
-
-Depois é só instrumentar handlers/usecases com spans, se quiser.
+  - **não impede a aplicação de subir**
 
 ---
 
@@ -291,3 +251,5 @@ make test          # go test ./...
 ```
 
 ---
+
+Este boilerplate foi pensado para servir de base para microserviços Go (como o SubWatch) com foco em **claridade de arquitetura**, **testabilidade** e **reutilização** de utilitários em `pkg/`.

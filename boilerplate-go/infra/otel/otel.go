@@ -1,7 +1,7 @@
 package otel
 
 import (
-	"boilerplate-go/application/services"
+	"boilerplate-go/application"
 	"context"
 	"os"
 	"time"
@@ -14,7 +14,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
-func Init(ctx context.Context, logger services.Logger) func() {
+func Init(ctx context.Context, logger application.Logger) func() {
 	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if endpoint == "" {
 		endpoint = "otel-collector:4317"
