@@ -12,7 +12,7 @@ services:
       - .env
     environment:
       OTEL_ENABLED: false
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_SERVICE_NAME: boilerplate-go
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0,service.environment=local
@@ -22,7 +22,11 @@ services:
     command: ["air"]
     networks:
       - app_network
+      - observability
 
 networks:
   app_network:
     driver: bridge
+  observability:
+    external: true
+    name: subwatch-observability
