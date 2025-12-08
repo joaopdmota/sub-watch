@@ -1,10 +1,10 @@
-package router_test
+package webserver_test
 
 import (
+	"boilerplate-go/infra/http/webserver"
 	"io"
 	"net/http"
 	"net/http/httptest" // Corrected import path
-	server "sub-watch/infra/http/router"
 	"testing"
 
 	"github.com/labstack/echo/v4"
@@ -13,14 +13,14 @@ import (
 
 func TestNewHTTPService(t *testing.T) {
 	port := "8080"
-	service := server.NewHTTPService(port)
+	service := webserver.NewHTTPService(port, "test")
 
 	assert.NotNil(t, service)
 }
 
 func TestAddRoute(t *testing.T) {
 	port := "8080"
-	service := server.NewHTTPService(port)
+	service := webserver.NewHTTPService(port, "test")
 
 	getHandler := func(c echo.Context) error {
 		return c.String(http.StatusOK, "GET OK")

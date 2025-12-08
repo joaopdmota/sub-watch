@@ -1,9 +1,9 @@
 package logger
 
 import (
+	"boilerplate-go/application/services"
 	"log/slog"
 	"os"
-	"sub-watch/application/services"
 )
 
 type SlogLogger struct {

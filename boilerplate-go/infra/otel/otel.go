@@ -1,9 +1,9 @@
 package otel
 
 import (
+	"boilerplate-go/application/services"
 	"context"
 	"os"
-	"sub-watch/application/services"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"

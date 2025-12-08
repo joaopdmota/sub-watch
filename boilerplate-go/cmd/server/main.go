@@ -1,15 +1,15 @@
 package main
 
 import (
+	"boilerplate-go/application"
+	"boilerplate-go/application/config"
+	"boilerplate-go/infra/logger"
+	"boilerplate-go/infra/otel"
 	"context"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"sub-watch/application"
-	"sub-watch/application/config"
-	"sub-watch/infra/logger"
-	"sub-watch/infra/otel"
 )
 
 func main() {

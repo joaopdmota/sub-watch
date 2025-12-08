@@ -1,8 +1,8 @@
 package config_test
 
 import (
+	"boilerplate-go/application/config"
 	"os"
-	"sub-watch/application/config"
 	"testing"
 )
 
