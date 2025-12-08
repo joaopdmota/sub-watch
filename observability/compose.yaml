@@ -1,18 +1,4 @@
 services:
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.114.0
-    container_name: otel-collector
-    command: ["--config=/etc/otelcol/config.yaml"]
-    volumes:
-      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
-    ports:
-      - "4317:4317" 
-      - "4318:4318"
-    depends_on:
-      - jaeger
-    networks:
-      - observability
-
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger
@@ -21,11 +7,24 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
     ports:
       - "16686:16686"
-      - "14250:14250"
+    networks:
+      - observability
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    container_name: otel-collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      - jaeger
+    ports:
+      - "4317:4317"
+      - "4318:4318"
     networks:
       - observability
 
 networks:
   observability:
-    name: subwatch-observability
     driver: bridge
+    name: subwatch-observability
