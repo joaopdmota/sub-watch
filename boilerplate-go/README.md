@@ -210,7 +210,7 @@ O domínio (`application/domain`) não conhece HTTP, banco, nem nada de infra.
 
 ---
 
-## 🧾 Logger (via pkg/logger)
+## 🧾 Logger
 
 Interface de logger no domínio (exemplo):
 
