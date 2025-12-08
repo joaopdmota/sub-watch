@@ -1,0 +1,5 @@
+@baseUrl = http://localhost:8080
+
+### Get user by document
+GET {{baseUrl}}/consulta/12345678900
+Content-Type: application/json
