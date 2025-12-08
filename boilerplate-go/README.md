@@ -157,6 +157,7 @@ boilerplate-go/
 │   │   └── env_test.go
 │   ├── domain/                 # Entidades e regras de negócio puras
 │   └── usecases/               # Casos de uso da aplicação
+│   └── logger.go               # Abstrações de logger
 ├── cmd/
 │   └── server/
 │       └── main.go             # Entrypoint da API
@@ -173,7 +174,6 @@ boilerplate-go/
 │   ├── date/                   # Provider de datas (ex.: Now())
 │   ├── hash/                   # Hash de senha (bcrypt, etc.)
 │   ├── id/                     # Gerador de IDs (UUID)
-│   └── logger/                 # Abstrações de logger reutilizáveis
 ├── tmp/                        # Artefatos temporários (binário gerado pelo Air)
 ├── .air.toml                   # Configuração do Air (hot reload)
 ├── .env                        # Env local (não versionar)
