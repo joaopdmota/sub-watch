@@ -1,0 +1,129 @@
+basePath: /
+definitions:
+  handlers.DocumentResponse:
+    properties:
+      bairro:
+        example: ITAIM BIBI
+        type: string
+      capital_social:
+        example: "200000000.00"
+        type: string
+      cep:
+        example: "04538133"
+        type: string
+      cnae_fiscal:
+        example: "6319400"
+        type: string
+      cnae_fiscal_descricao:
+        example: Portais, provedores de conteúdo
+        type: string
+      cnpj:
+        description: CNPJ fields
+        example: "06990590000123"
+        type: string
+      cpf:
+        description: CPF fields
+        example: "12345678900"
+        type: string
+      data_inicio_atividade:
+        example: 03/11/2005
+        type: string
+      data_nascimento:
+        example: 01/01/1990
+        type: string
+      descricao_situacao_cadastral:
+        example: Ativa
+        type: string
+      logradouro:
+        example: AV BRIGADEIRO FARIA LIMA
+        type: string
+      municipio:
+        example: SAO PAULO
+        type: string
+      nome:
+        example: João da Silva
+        type: string
+      nome_fantasia:
+        example: Google
+        type: string
+      numero:
+        example: "3477"
+        type: string
+      porte:
+        example: "05"
+        type: string
+      porte_descricao:
+        example: Demais
+        type: string
+      razao_social:
+        example: GOOGLE BRASIL INTERNET LTDA
+        type: string
+      sexo:
+        example: M
+        type: string
+      situacao:
+        example: Regular
+        type: string
+      situacao_cadastral:
+        example: "2"
+        type: string
+      telefone:
+        example: "1121395000"
+        type: string
+      tipo:
+        description: Common fields
+        example: CNPJ
+        type: string
+      uf:
+        example: SP
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      message:
+        example: 'invalid number: must contain 11 digits (CPF) or 14 digits (CNPJ)'
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API to query Brazilian documents (CPF and CNPJ) from the Federal Revenue
+    via ReceitaWS. The document type is automatically detected.
+  title: Consulta CPF/CNPJ API
+  version: "1.0"
+paths:
+  /consulta/{numero}:
+    get:
+      consumes:
+      - application/json
+      description: Queries CPF (11 digits) or CNPJ (14 digits) data from the Federal
+        Revenue. The type is detected automatically.
+      parameters:
+      - description: CPF or CNPJ number (with or without formatting)
+        in: path
+        name: numero
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Data found
+          schema:
+            $ref: '#/definitions/handlers.DocumentResponse'
+        "400":
+          description: Invalid document
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Document not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Search CPF or CNPJ
+      tags:
+      - Documents
+swagger: "2.0"

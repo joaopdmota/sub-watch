@@ -1,0 +1,5 @@
+@baseUrl = http://localhost:8080
+
+### Get Health
+GET {{baseUrl}}/health
+Content-Type: application/json

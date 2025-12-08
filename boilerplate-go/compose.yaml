@@ -1,0 +1,28 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: .build/dev/Dockerfile.dev
+      args:
+        API_PORT: ${API_PORT}
+        SERVICE_NAME: ${SERVICE_NAME}
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      OTEL_ENABLED: false
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: boilerplate-go
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0,service.environment=local
+    volumes:
+      - .:/app
+      - /app/tmp
+    command: ["air"]
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
