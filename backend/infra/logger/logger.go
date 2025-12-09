@@ -3,11 +3,11 @@ package logger
 import (
 	"log/slog"
 	"os"
-	"sub-watch-backend/application/services"
+	"sub-watch-backend/application"
 )
 
 type SlogLogger struct {
-    logger services.Logger
+    logger application.Logger
 }
 
 func New() *SlogLogger {

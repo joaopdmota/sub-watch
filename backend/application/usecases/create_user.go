@@ -54,8 +54,6 @@ func (u *UserInput) Validate() *app_errors.Error {
 	return nil
 }
 
-
-
 func (u *CreateUserUseCase) Execute(ctx context.Context, input UserInput) *app_errors.Error {
 	userInput := &UserInput{
 		Name:     input.Name,
