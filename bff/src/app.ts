@@ -1,8 +1,9 @@
+// src/app.ts (versão corrigida)
 import Env from "./config/env";
-import ExpressAdapter from "./infra/http/expressAdapter";
-import Router from "./infra/http/router";
 import { PinoLogger } from "./infra/logger/loggerAdaptter";
 import { startTelemetry } from "./infra/otel/init";
+import { default as ExpressAdapter } from './infra/http/expressAdapter';
+import { default as Router } from './infra/http/router';
 
 async function bootstrap() {
   const logger = new PinoLogger();
