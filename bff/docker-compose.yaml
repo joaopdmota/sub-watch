@@ -1,0 +1,28 @@
+services:
+  bff:
+    build:
+      context: .           
+      dockerfile: .build/dev/Dockerfile.dev
+    container_name: sub-watch-bff
+    command: npm run dev
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+    environment:
+      - OTEL_ENABLED=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_SERVICE_NAME=sub-watch-bff
+      - OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,service.environment=local
+    working_dir: /app
+    volumes:
+      - .:/app                 
+      - /app/node_modules     
+    networks:
+      - observability
+
+networks:
+  observability:
+    external: true
+    name: subwatch-observability
