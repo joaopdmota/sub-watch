@@ -13,3 +13,10 @@ server-logs:
 .PHONY: install
 install:
 	 docker compose run --rm bff npm install
+
+.PHONY: env
+env:
+	@echo "Copying .env.example to .env..."
+	cp .env.example .env
+	@echo ".env file created."
+	 

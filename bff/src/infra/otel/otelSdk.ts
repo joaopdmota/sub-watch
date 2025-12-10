@@ -1,9 +1,9 @@
+// src/infra/otel/otelSdk.ts
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-
 import { OtelConfig } from './otelConfig';
 
 export class OtelSDK {
@@ -16,8 +16,14 @@ export class OtelSDK {
       'service.environment': config.environment,
     });
 
+    const endpoint =
+      this.config.endpoint.startsWith('http://') ||
+      this.config.endpoint.startsWith('https://')
+        ? this.config.endpoint
+        : `http://${this.config.endpoint}`;
+
     const traceExporter = new OTLPTraceExporter({
-      url: config.endpoint,
+      url: endpoint,
     });
 
     this.sdk = new NodeSDK({

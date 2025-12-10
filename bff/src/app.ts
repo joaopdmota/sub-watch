@@ -1,9 +1,6 @@
-// src/app.ts (versão corrigida)
 import Env from "./config/env";
 import { PinoLogger } from "./infra/logger/loggerAdaptter";
 import { startTelemetry } from "./infra/otel/init";
-import { default as ExpressAdapter } from './infra/http/expressAdapter';
-import { default as Router } from './infra/http/router';
 
 async function bootstrap() {
   const logger = new PinoLogger();
@@ -19,6 +16,9 @@ async function bootstrap() {
       logger.error(`Failed to start telemetry: ${(err as Error).message}`);
     }
   }
+
+  const { default: ExpressAdapter } = await import("./infra/http/expressAdapter");
+  const { default: Router } = await import("./infra/http/router");
 
   const app = new ExpressAdapter(logger);
   new Router(app);
