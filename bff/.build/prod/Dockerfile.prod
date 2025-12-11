@@ -1,0 +1,41 @@
+# .build/prod/Dockerfile.prod
+
+########################
+# STAGE 1 - BUILD
+########################
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Copia arquivos de dependência
+COPY package*.json ./
+
+# Instala dependências (build)
+RUN npm ci
+
+# Copia o restante do código
+COPY . .
+
+# Builda o TypeScript para dist/
+RUN npm run build
+
+
+########################
+# STAGE 2 - RUNTIME
+########################
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copia apenas o necessário do builder
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+
+# Porta da aplicação
+EXPOSE 3001
+
+# Comando de produção
+CMD ["node", "dist/server.js"]
