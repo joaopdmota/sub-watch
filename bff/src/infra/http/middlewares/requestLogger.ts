@@ -1,6 +1,6 @@
 
 import LoggerAdapter from "../../logger/loggerAdapter";
-import { HttpNextFunction, HttpRequest, HttpResponse, AbstractHttpMiddleware} from "./requet";
+import { HttpNextFunction, HttpRequest, HttpResponse, AbstractHttpMiddleware} from "./request";
 
 export function createLoggingMiddleware(logger: LoggerAdapter): AbstractHttpMiddleware {
     return (req: HttpRequest, res: HttpResponse, next: HttpNextFunction) => {
