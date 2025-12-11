@@ -14,7 +14,7 @@ help:
 	@echo "  make up           Start containers"
 	@echo "  make down         Stop containers"
 	@echo "  make restart      Restart containers"
-	@echo "  make logs         Tail application logs"
+	@echo "  make server-logs         Tail application logs"
 	@echo "  make shell        Access container shell"
 	@echo "  make install      Install npm dependencies inside container"
 	@echo "  make test         Run tests (inside container)"
@@ -58,8 +58,8 @@ clean:
 # Dev & Debug
 # ---------------------------------------------------
 
-.PHONY: logs
-logs:
+.PHONY: server-logs
+server-logs:
 	@echo "Tailing logs..."
 	$(COMPOSE) logs -f bff
 

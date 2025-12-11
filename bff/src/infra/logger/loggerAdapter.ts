@@ -1,5 +1,5 @@
 import pino from "pino";
-import { Logger } from "../application/config/logger";
+import { Logger } from "../../application/config/logger";
 
 export default class LoggerAdapter implements Logger {
     private logger: pino.Logger;

@@ -1,39 +1,61 @@
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { Resource } from "@opentelemetry/resources";
+import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import * as grpc from '@grpc/grpc-js'; 
 
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import { NodeSDK } from '@opentelemetry/sdk-node';
+const OTEL_ENABLED = process.env.OTEL_ENABLED === 'true';
+const TRACES_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || 'grpc://otel-collector:4317';
+const SERVICE_NAME = process.env.OTEL_SERVICE_NAME || process.env.SERVICE_NAME || 'default-node-service';
+const SERVICE_VERSION = process.env.OTEL_SERVICE_VERSION || '1.0.0';
+const ENVIRONMENT = process.env.OTEL_RESOURCE_ENVIRONMENT || 'development';
 
-const otelExporter = new OTLPTraceExporter({
-  // A URL do seu Otel Collector.
-  // Se sua aplicação BFF rodar fora do Docker, use localhost.
-  // Se rodar dentro da mesma rede Docker, use o nome do serviço: 'otel-collector:4317'
-  url: 'http://localhost:4317',
-});
+(() => {
+    if (!OTEL_ENABLED) {
+        console.log("[OTEL] OpenTelemetry disabled by configuration.");
+        return;
+    }
 
-const sdk = new NodeSDK({
-  // Defina o nome do serviço que aparecerá no Jaeger
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: 'bff-sub-watch',
-  }),
-  traceExporter: otelExporter,
-  // Habilita a instrumentação automática para módulos populares do Node.js
-  instrumentations: [getNodeAutoInstrumentations()],
-});
+    const otelEndpoint = TRACES_ENDPOINT.startsWith('grpc://')
+        ? TRACES_ENDPOINT.replace('grpc://', '')
+        : TRACES_ENDPOINT.replace(/^https?:\/\//, '');
 
-// Inicia o SDK e a instrumentação
-try {
-  sdk.start();
-  console.log('OpenTelemetry SDK started successfully.');
-} catch (error) {
-  console.error('Error starting OpenTelemetry SDK:', error);
-}
+    const resource = new Resource({
+        [SemanticResourceAttributes.SERVICE_NAME]: SERVICE_NAME,
+        [SemanticResourceAttributes.SERVICE_VERSION]: SERVICE_VERSION,
+        "deployment.environment": ENVIRONMENT,
+    });
 
-// Garante que o SDK seja desligado corretamente ao finalizar a aplicação
-process.on('SIGTERM', () => {
-  sdk.shutdown()
-    .then(() => console.log('Tracing terminated.'))
-    .catch((error) => console.log('Error terminating tracing', error))
-    .finally(() => process.exit(0));
-});
+    const traceExporter = new OTLPTraceExporter({
+        url: otelEndpoint,
+        credentials: grpc.credentials.createInsecure(), 
+    });
+
+    const sdk = new NodeSDK({
+        resource,
+        traceExporter,
+        instrumentations: [getNodeAutoInstrumentations()],
+    });
+
+    try {
+        sdk.start();
+        console.log(
+            `[OTEL] OpenTelemetry SDK activated. Sending INSECURE to: ${otelEndpoint}`,
+        );
+    } catch (err) {
+        console.error("[OTEL] Critical failure to start SDK. Tracing disabled.", err);
+        return;
+    }
+    
+    process.on("SIGTERM", () => {
+        sdk
+          .shutdown()
+          .then(() => console.log("[OTEL] Sdk shutdown with success (SIGTERM)"))
+          .catch((err) =>
+            console.error("[OTEL] Error on shutdown SDK (SIGTERM)", err)
+          )
+          .finally(() => process.exit(0));
+    });
+
+})();
