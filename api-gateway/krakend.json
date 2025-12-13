@@ -1,0 +1,73 @@
+{
+  "version": 3,
+  "name": "sub-watch-api-gateway",
+  "port": 8000,
+  "timeout": "5000ms",
+  "extra_config": {
+    "telemetry/logging": {
+      "level": "INFO",
+      "prefix": "[KRAKEND]"
+    },
+    "qos/ratelimit/router": {
+      "max_rate": 100,
+      "client_max_rate": 10
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/api/users",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/api/users",
+          "host": ["http://host.docker.internal:8081"],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/users",
+      "method": "GET",
+      "backend": [
+        {
+          "url_pattern": "/api/users",
+          "host": ["http://host.docker.internal:8081"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/users/{id}",
+      "method": "GET",
+      "backend": [
+        {
+          "url_pattern": "/api/users/{id}",
+          "host": ["http://host.docker.internal:8081"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/users/{id}",
+      "method": "PUT",
+      "backend": [
+        {
+          "url_pattern": "/api/users/{id}",
+          "host": ["http://host.docker.internal:8081"],
+          "method": "PUT"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/users/{id}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "url_pattern": "/api/users/{id}",
+          "host": ["http://host.docker.internal:8081"],
+          "method": "DELETE"
+        }
+      ]
+    }
+  ]
+}

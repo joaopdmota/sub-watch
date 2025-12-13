@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  krakend-gateway:
+    image: krakend:latest 
+    
+    container_name: krakend-api-gateway
+    ports:
+      - "8000:8000"
+      
+    volumes:
+      - ./krakend.json:/etc/krakend/krakend.json
+      
+    command: ["run", "-c", "/etc/krakend/krakend.json"]
+    restart: always
+    
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    
