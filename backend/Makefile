@@ -115,3 +115,12 @@ seed:
 		cat $$file | docker compose exec -T postgres psql -U $(DB_USER) -d $(DB_NAME); \
 	done
 	@echo "Seeding finished."
+
+TOKEN_BIN := .token-tmp
+
+.PHONY: token
+token:
+	@echo "--- 🔑 Generating Token ---"
+	go build -o $(TOKEN_BIN) ./scripts/token.go
+	./$(TOKEN_BIN)
+	rm $(TOKEN_BIN)

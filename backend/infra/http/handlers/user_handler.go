@@ -8,15 +8,15 @@ import (
 )
 
 type UserHandler struct {
-	listUsersUseCase *usecases.ListUsersUseCase
-	getUserUseCase   *usecases.GetUserUseCase
+	listUsersUseCase  *usecases.ListUsersUseCase
+	getUserUseCase    *usecases.GetUserUseCase
 	createUserUseCase *usecases.CreateUserUseCase
 }
 
 func NewUserHandler(listUsersUseCase *usecases.ListUsersUseCase, getUserUseCase *usecases.GetUserUseCase, createUserUseCase *usecases.CreateUserUseCase) *UserHandler {
 	return &UserHandler{
-		listUsersUseCase: listUsersUseCase,
-		getUserUseCase:   getUserUseCase,
+		listUsersUseCase:  listUsersUseCase,
+		getUserUseCase:    getUserUseCase,
 		createUserUseCase: createUserUseCase,
 	}
 }
@@ -35,10 +35,12 @@ func (h *UserHandler) ListUsers(c echo.Context) error {
 
 	users, err := h.listUsersUseCase.Execute(ctx)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(err.Code, err)
 	}
 
-	return c.JSON(http.StatusOK, users)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"data": users,
+	})
 }
 
 // GetUser godoc
@@ -58,12 +60,9 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 
 	user, err := h.getUserUseCase.Execute(ctx, id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(err.Code, err)
 	}
 
-	if user == nil {
-		return c.JSON(http.StatusNotFound, "user not found")
-	}
 
 	return c.JSON(http.StatusOK, user)
 }
@@ -87,7 +86,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	}
 
 	if err := h.createUserUseCase.Execute(ctx, userInput); err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(err.Code, err)
 	}
 
 	return c.NoContent(http.StatusCreated)

@@ -15,48 +15,41 @@ type DefaultHTTPClient struct {
 	headers map[string]string
 }
 
-// ClientOption is a function that configures the HTTPClient
 type ClientOption func(*DefaultHTTPClient)
 
-// WithTimeout sets the timeout for HTTP requests
 func WithTimeout(timeout time.Duration) ClientOption {
 	return func(c *DefaultHTTPClient) {
 		c.client.Timeout = timeout
 	}
 }
 
-// WithHeaders sets custom headers for all requests
 func WithHeaders(headers map[string]string) ClientOption {
 	return func(c *DefaultHTTPClient) {
 		c.headers = headers
 	}
 }
 
-// WithTransport sets a custom transport for the HTTP client
 func WithTransport(transport http.RoundTripper) ClientOption {
 	return func(c *DefaultHTTPClient) {
 		c.client.Transport = transport
 	}
 }
 
-// WithHTTPClient allows using a completely custom http.Client
 func WithHTTPClient(client *http.Client) ClientOption {
 	return func(c *DefaultHTTPClient) {
 		c.client = client
 	}
 }
 
-// NewDefaultHTTPClient creates a new HTTP client with optional configuration
 func NewDefaultHTTPClient(baseUrl string, opts ...ClientOption) *DefaultHTTPClient {
 	client := &DefaultHTTPClient{
 		baseUrl: baseUrl,
 		client: &http.Client{
-			Timeout: 30 * time.Second, // default timeout
+			Timeout: 30 * time.Second,
 		},
 		headers: make(map[string]string),
 	}
 
-	// Apply all options
 	for _, opt := range opts {
 		opt(client)
 	}

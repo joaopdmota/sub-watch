@@ -1,15 +1,15 @@
 @baseUrl = http://localhost:8081/api
 
-### Get All Users
-GET {{baseUrl}}/users
+### Get All Categories
+GET {{baseUrl}}/categories
 Content-Type: application/json
 
-### Get User by ID
-GET {{baseUrl}}/users/347af1cb-1751-4dfb-828e-b8840ec621ccdddd
+### Get Category by ID
+GET {{baseUrl}}/categories/347af1cb-1751-4dfb-828e-b8840ec621ccdddd
 Content-Type: application/json
 
-### Create User
-POST {{baseUrl}}/users
+### Create Category
+POST {{baseUrl}}/categories
 Content-Type: application/json
 
 {

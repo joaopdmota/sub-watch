@@ -10,6 +10,7 @@ type ConfigMap struct {
 	ApiPort                 int
 	ServiceName             string
 	OtelEnabled             bool
+	JWTSecretKey            string
 }
 
 var Config *ConfigMap
@@ -23,6 +24,7 @@ func LoadEnvs() *ConfigMap {
 		ApiPort:                 GetEnvNumber("API_PORT"),
 		ServiceName:             GetEnvString("SERVICE_NAME"),
 		OtelEnabled:             GetEnvBool("OTEL_ENABLED", false),
+		JWTSecretKey:            GetEnvString("JWT_SECRET_KEY"),
 	}
 
 	return Config

@@ -6,6 +6,7 @@ const (
 	ERROR_BAD_REQUEST          = "BAD_REQUEST"
 	ERROR_UNPROCESSABLE_ENTITY = "UNPROCESSABLE_ENTITY"
 	ERROR_NOT_FOUND            = "NOT_FOUND"
+	
 )
 
 type Error struct {
@@ -13,6 +14,7 @@ type Error struct {
 	Type    string `json:"type"`
 	Path    string `json:"path,omitempty"`
 	Message string `json:"message,omitempty"`
+	Details map[string]interface{} `json:"details,omitempty"`
 }
 
 type Errors []Error

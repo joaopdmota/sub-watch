@@ -2,9 +2,9 @@ package usecases
 
 import (
 	"context"
+	app_errors "sub-watch-backend/application/errors"
 	"sub-watch-backend/infra/repositories"
 )
-
 
 type ListUsersUseCase struct {
 	repo repositories.UserRepository
@@ -14,7 +14,7 @@ func NewListUsersUseCase(repo repositories.UserRepository) *ListUsersUseCase {
 	return &ListUsersUseCase{repo: repo}
 }
 
-func (u *ListUsersUseCase) Execute(ctx context.Context) ([]UserOutput, error) {
+func (u *ListUsersUseCase) Execute(ctx context.Context) ([]UserOutput, *app_errors.Error) {
 	users, err := u.repo.FindAll(ctx)
 	if err != nil {
 		return nil, err

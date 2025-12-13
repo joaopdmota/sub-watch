@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/consulta/{numero}": {
+        "/categories": {
             "get": {
-                "description": "Queries CPF (11 digits) or CNPJ (14 digits) data from the Federal Revenue. The type is detected automatically.",
+                "description": "Get a list of all registered categories",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,41 +25,202 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Documents"
+                    "categories"
                 ],
-                "summary": "Search CPF or CNPJ",
+                "summary": "List all categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Category"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{id}": {
+            "get": {
+                "description": "Get a single category by their ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Get a category by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "CPF or CNPJ number (with or without formatting)",
-                        "name": "numero",
+                        "description": "Category ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Data found",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.DocumentResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid document",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/domain.Category"
                         }
                     },
                     "404": {
-                        "description": "Document not found",
+                        "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "description": "Get a list of all registered users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Create a new user",
+                "parameters": [
+                    {
+                        "description": "User object",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/usecases.UserInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/usecases.UserOutput"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "description": "Get a single user by their ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get a user by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/usecases.UserOutput"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -67,116 +228,86 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlers.DocumentResponse": {
+        "domain.Category": {
             "type": "object",
             "properties": {
-                "bairro": {
-                    "type": "string",
-                    "example": "ITAIM BIBI"
+                "color": {
+                    "type": "string"
                 },
-                "capital_social": {
-                    "type": "string",
-                    "example": "200000000.00"
+                "createdAt": {
+                    "type": "string"
                 },
-                "cep": {
-                    "type": "string",
-                    "example": "04538133"
+                "icon": {
+                    "type": "string"
                 },
-                "cnae_fiscal": {
-                    "type": "string",
-                    "example": "6319400"
+                "id": {
+                    "type": "string"
                 },
-                "cnae_fiscal_descricao": {
-                    "type": "string",
-                    "example": "Portais, provedores de conteúdo"
-                },
-                "cnpj": {
-                    "description": "CNPJ fields",
-                    "type": "string",
-                    "example": "06990590000123"
-                },
-                "cpf": {
-                    "description": "CPF fields",
-                    "type": "string",
-                    "example": "12345678900"
-                },
-                "data_inicio_atividade": {
-                    "type": "string",
-                    "example": "03/11/2005"
-                },
-                "data_nascimento": {
-                    "type": "string",
-                    "example": "01/01/1990"
-                },
-                "descricao_situacao_cadastral": {
-                    "type": "string",
-                    "example": "Ativa"
-                },
-                "logradouro": {
-                    "type": "string",
-                    "example": "AV BRIGADEIRO FARIA LIMA"
-                },
-                "municipio": {
-                    "type": "string",
-                    "example": "SAO PAULO"
-                },
-                "nome": {
-                    "type": "string",
-                    "example": "João da Silva"
-                },
-                "nome_fantasia": {
-                    "type": "string",
-                    "example": "Google"
-                },
-                "numero": {
-                    "type": "string",
-                    "example": "3477"
-                },
-                "porte": {
-                    "type": "string",
-                    "example": "05"
-                },
-                "porte_descricao": {
-                    "type": "string",
-                    "example": "Demais"
-                },
-                "razao_social": {
-                    "type": "string",
-                    "example": "GOOGLE BRASIL INTERNET LTDA"
-                },
-                "sexo": {
-                    "type": "string",
-                    "example": "M"
-                },
-                "situacao": {
-                    "type": "string",
-                    "example": "Regular"
-                },
-                "situacao_cadastral": {
-                    "type": "string",
-                    "example": "2"
-                },
-                "telefone": {
-                    "type": "string",
-                    "example": "1121395000"
-                },
-                "tipo": {
-                    "description": "Common fields",
-                    "type": "string",
-                    "example": "CNPJ"
-                },
-                "uf": {
-                    "type": "string",
-                    "example": "SP"
+                "name": {
+                    "type": "string"
                 }
             }
         },
-        "handlers.ErrorResponse": {
+        "domain.User": {
             "type": "object",
             "properties": {
-                "message": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "passwordHash": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "usecases.UserInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string",
-                    "example": "invalid number: must contain 11 digits (CPF) or 14 digits (CNPJ)"
+                    "maxLength": 100,
+                    "minLength": 3
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 6
+                }
+            }
+        },
+        "usecases.UserOutput": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         }
@@ -185,12 +316,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
-	Host:             "localhost:8080",
-	BasePath:         "/",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Consulta CPF/CNPJ API",
-	Description:      "API to query Brazilian documents (CPF and CNPJ) from the Federal Revenue via ReceitaWS. The document type is automatically detected.",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	app_errors "sub-watch-backend/application/errors"
 	"sub-watch-backend/infra/repositories"
 	"time"
 )
@@ -21,7 +22,7 @@ func NewGetUserUseCase(repo repositories.UserRepository) *GetUserUseCase {
 	return &GetUserUseCase{repo: repo}
 }
 
-func (u *GetUserUseCase) Execute(ctx context.Context, id string) (*UserOutput, error) {
+func (u *GetUserUseCase) Execute(ctx context.Context, id string) (*UserOutput, *app_errors.Error) {
 	user, err := u.repo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err

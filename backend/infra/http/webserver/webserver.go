@@ -32,6 +32,9 @@ func NewHTTPService(port string, serviceName string) *HTTPService {
     }
 }
 
+func (s *HTTPService) Group(prefix string) *echo.Group {
+	return s.echo.Group(prefix)
+}
 
 func (s *HTTPService) AddRoute(method, pattern string, handler echo.HandlerFunc) {
 	switch method {
@@ -45,18 +48,18 @@ func (s *HTTPService) AddRoute(method, pattern string, handler echo.HandlerFunc)
 		s.echo.DELETE(pattern, handler)
 	default:
 		s.echo.Any(pattern, func(c echo.Context) error {
-			return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Sprintf("Método %s não é suportado", method))
+			return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Sprintf("Method %s not allowed", method))
 		})
 	}
 }
 
 func (s *HTTPService) Start() error {
-	fmt.Printf("Servidor rodando na porta %s...\n", s.server.Addr)
+	fmt.Printf("Server running on port %s...\n", s.server.Addr)
 	return s.echo.StartServer(s.server)
 }
 
 func (s *HTTPService) Stop(ctx context.Context) error {
-	fmt.Println("Parando o servidor...")
+	fmt.Println("Stopping server...")
 	return s.server.Shutdown(ctx)
 }
 

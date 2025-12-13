@@ -16,6 +16,8 @@ type PostgresAdapter struct {
 	db *sql.DB
 }
 
+var ErrNoRows = sql.ErrNoRows
+
 func NewPostgresAdapter() *PostgresAdapter {
 	return &PostgresAdapter{}
 }

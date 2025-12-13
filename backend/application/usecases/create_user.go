@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"sub-watch-backend/application"
 	"sub-watch-backend/application/domain"
 	app_errors "sub-watch-backend/application/errors"
 	"sub-watch-backend/infra/repositories"
@@ -16,56 +17,32 @@ type CreateUserUseCase struct {
 	uuid id.UuidProvider
 	hasher hash.PasswordHasher
 	date date.DateProvider
+	validator application.Validator
 }
 
 type UserInput struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string `json:"name" validate:"required,min=3,max=100"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6,max=100"`
 }
 
-func NewCreateUserUseCase(repo repositories.UserRepository, uuid id.UuidProvider, hasher hash.PasswordHasher, date date.DateProvider) *CreateUserUseCase {
-	return &CreateUserUseCase{repo: repo, uuid: uuid, hasher: hasher, date: date}
-}
-
-func (u *UserInput) Validate() *app_errors.Error {
-	if u.Name == "" {
-		return &app_errors.Error{
-			Code:    400,
-			Type:    app_errors.ERROR_BAD_REQUEST,
-			Message: "Name is required",
-		}
-	}
-	if u.Email == "" {
-		return &app_errors.Error{
-			Code:    400,
-			Type:    app_errors.ERROR_BAD_REQUEST,
-			Message: "Email is required",
-		}
-	}
-	if u.Password == "" {
-		return &app_errors.Error{
-			Code:    400,
-			Type:    app_errors.ERROR_BAD_REQUEST,
-			Message: "Password is required",
-		}
-	}
-
-	return nil
+func NewCreateUserUseCase(repo repositories.UserRepository, uuid id.UuidProvider, hasher hash.PasswordHasher, date date.DateProvider, validator application.Validator) *CreateUserUseCase {
+	return &CreateUserUseCase{repo: repo, uuid: uuid, hasher: hasher, date: date, validator: validator}
 }
 
 func (u *CreateUserUseCase) Execute(ctx context.Context, input UserInput) *app_errors.Error {
-	userInput := &UserInput{
-		Name:     input.Name,
-		Email:    input.Email,
-		Password: input.Password,
+	if err := u.validator.ValidateStruct(input); err != nil {
+		formattedErrors := u.validator.FormatValidationErrors(err)
+
+		return &app_errors.Error{
+			Code:    400,
+			Type:    app_errors.ERROR_BAD_REQUEST,
+			Message: "Validation failed",
+			Details: formattedErrors,
+		}
 	}
 
-	if err := userInput.Validate(); err != nil {
-		return err
-	}
-
-	hashedPassword, err := u.hasher.Hash(userInput.Password)
+	hashedPassword, err := u.hasher.Hash(input.Password)
 	if err != nil {
 		return &app_errors.Error{
 			Code:    500,
@@ -74,12 +51,10 @@ func (u *CreateUserUseCase) Execute(ctx context.Context, input UserInput) *app_e
 		}
 	}
 
-	user, err := u.repo.FindByEmail(ctx, userInput.Email)
-	if err != nil {
-		return &app_errors.Error{
-			Code:    500,
-			Type:    app_errors.ERROR_INTERNAL_SERVER_ERROR,
-			Message: "Failed to find user by email",
+	user, appErr := u.repo.FindByEmail(ctx, input.Email)
+	if appErr != nil {
+		if appErr.Code != 404 {
+			return appErr
 		}
 	}
 
@@ -95,8 +70,8 @@ func (u *CreateUserUseCase) Execute(ctx context.Context, input UserInput) *app_e
 		UpdatedAt: u.date.Now(),
 		CreatedAt: u.date.Now(),
 		ID:       u.uuid.NewID(),
-		Name:     userInput.Name,
-		Email:    userInput.Email,
+		Name:     input.Name,
+		Email:    input.Email,
 		PasswordHash: hashedPassword,
 	}
 
