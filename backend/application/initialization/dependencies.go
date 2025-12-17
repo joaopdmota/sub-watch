@@ -1,7 +1,6 @@
 package app_init
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"sub-watch-backend/application/auth"
@@ -48,8 +47,7 @@ func InitializeDependencies(envs *config.ConfigMap) *webserver.HTTPService {
 	userRepo := repositories.NewUserRepository(dbInstance)
 	categoryRepo := repositories.NewCategoryRepository(dbInstance)
 
-	fmt.Println("categoryRepo", categoryRepo)
-	fmt.Println("userRepo", userRepo)
+	authLoginUseCase := usecases.NewAuthLoginUseCase(userRepo, hasher)
 
 	getUserUseCase := usecases.NewGetUserUseCase(userRepo)
 	listUsersUseCase := usecases.NewListUsersUseCase(userRepo)
@@ -60,6 +58,8 @@ func InitializeDependencies(envs *config.ConfigMap) *webserver.HTTPService {
 
 	userHandler := handlers.NewUserHandler(listUsersUseCase, getUserUseCase, createUserUseCase)
 	categoryHandler := handlers.NewCategoryHandler(getCategoryUseCase, listCategoriesUseCase)
+
+	authHandler := handlers.NewAuthHandler(authLoginUseCase)
 
 	prefix := "api/"
 
@@ -73,6 +73,9 @@ func InitializeDependencies(envs *config.ConfigMap) *webserver.HTTPService {
 	usersGroup.GET("/:id", userHandler.GetUser)
 	usersGroup.GET("", userHandler.ListUsers)
 	usersGroup.POST("", userHandler.CreateUser)	
+
+	authGroup := httpService.Group(prefix + "auth")
+	authGroup.POST("/login", authHandler.Login)
 
 	return httpService
 }

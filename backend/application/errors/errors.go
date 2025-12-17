@@ -11,7 +11,7 @@ const (
 
 type Error struct {
 	Code    int    `json:"code"`
-	Type    string `json:"type"`
+	Type    string `json:"type,omitempty"`
 	Path    string `json:"path,omitempty"`
 	Message string `json:"message,omitempty"`
 	Details map[string]interface{} `json:"details,omitempty"`
