@@ -10,7 +10,24 @@ import (
 	app_init "sub-watch-backend/application/initialization"
 	"sub-watch-backend/infra/logger"
 	"sub-watch-backend/infra/otel"
+
+	_ "sub-watch-backend/docs"
 )
+
+// @title           Sub Watch API
+// @version         1.0
+// @description     This is the API server for Sub Watch application.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /
 
 	func main() {
 		envs := config.LoadEnvs()

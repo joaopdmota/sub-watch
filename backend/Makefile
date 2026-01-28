@@ -124,3 +124,7 @@ token:
 	go build -o $(TOKEN_BIN) ./scripts/token.go
 	./$(TOKEN_BIN)
 	rm $(TOKEN_BIN)
+
+.PHONY: agents
+agents:
+	@bash -c "$$(curl -fsSL https://raw.githubusercontent.com/joaopdmota/antigravity-setup/main/scripts/sync-agents.sh)"
