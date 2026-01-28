@@ -1,31 +1,36 @@
 package app_errors
 
-const (
-	ERROR_UNKNOW               = "UNKNOW"
-	ERROR_BAD_REQUEST          = "BAD_REQUEST"
-	ERROR_UNPROCESSABLE_ENTITY = "UNPROCESSABLE_ENTITY"
-	ERROR_NOT_FOUND            = "NOT_FOUND"
+import (
+	"errors"
+	"fmt"
 )
 
-type Error struct {
+var (
+	ErrUnknown              = errors.New("unknown error")
+	ErrBadRequest           = errors.New("bad request")
+	ErrUnprocessableEntity = errors.New("unprocessable entity")
+	ErrNotFound             = errors.New("not found")
+)
+
+type AppError struct {
 	Code    int    `json:"code"`
 	Type    string `json:"type"`
 	Path    string `json:"path,omitempty"`
 	Message string `json:"message,omitempty"`
+	Err     error  `json:"-"`
 }
 
-type Errors []Error
+func (e AppError) Error() string {
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %v", e.Message, e.Err)
+	}
+	return e.Message
+}
+
+func (e AppError) Unwrap() error {
+	return e.Err
+}
 
 type ErrorsResponseDTO struct {
-	Errors Errors `json:"errors"`
-}
-
-func CreateErrors(errs ...Error) Errors {
-	var errors Errors
-
-	for _, err := range errs {
-		errors = append(errors, err)
-	}
-
-	return errors
+	Errors []AppError `json:"errors"`
 }

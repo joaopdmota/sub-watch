@@ -1,253 +1,175 @@
 # boilerplate-go
 
-Backend em Go pensado para você **subir uma API rápido** sem abrir mão de boa arquitetura, DX e observabilidade opcional.
+Go Backend designed for **rapid API deployment** without compromising on architecture, DX, and optional observability.
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Features
 
-- **Arquitetura limpa**  
-  - Separação clara entre `cmd`, `internal/application`, `internal/domain`, `internal/infra` e `internal/pkg`
-  - Fácil de testar, manter e evoluir
+- **Clean Architecture**
+  - Clear separation between `cmd`, `internal/application`, `internal/domain`, `internal/infra`, and `internal/pkg`.
+  - Easy to test, maintain, and evolve.
 
-- **Servidor HTTP desacoplado**  
-  - Camada HTTP isolada em `internal/infra/http` (router, handlers, middlewares, webserver)
-  - `internal/application` e `internal/domain` não sabem nada de HTTP
+- **Dual Protocol Support (REST & gRPC)**
+  - **REST**: Powered by Echo, isolated in `internal/infra/http`.
+  - **gRPC**: Built-in support with reflection, isolated in `internal/infra/grpc`.
+  - Unified orchestration allows running both simultaneously.
 
-- **Config centralizada**  
-  - Leitura e validação de envs em `internal/application/config/env.go`
+- **Event-Driven Ready (Kafka)**
+  - Dedicated **stream processor** entrypoint in `cmd/stream`.
+  - Resilient Kafka subscriber implemented in `internal/infra/kafka` using `segmentio/kafka-go`.
 
-- **Logger estruturado**  
-  - Interface de logger no domínio (ex.: via `internal/internal/pkg/logger`)
-  - Implementação concreta em `internal/infra/logger` (quando aplicável)
+- **Centralized Configuration**
+  - Environment variable loading and validation in `internal/application/config/env.go`.
 
-- **Providers reutilizáveis em `internal/pkg/`**  
-  - `internal/pkg/id`: geração de IDs (UUID)
-  - `internal/pkg/hash`: hashing seguro de senha (bcrypt)
-  - `internal/pkg/date`: provider de datas testável (`Now()` injetável)
-  - `internal/internal/pkg/logger`: abstração de logger reutilizável entre serviços
+- **Structured Logging**
+  - Dedicated implementation in `internal/infra/logger`.
 
-- **OpenTelemetry pronto para uso (mas opcional)**  
-  - Integração em `internal/infra/otel` (quando configurado)
-  - Controle via `OTEL_ENABLED`
-  - Se o collector estiver fora do ar, a app **continua funcionando**
+- **Reusable Providers in `internal/pkg/`**
+  - `internal/pkg/id`: UUID generation.
+  - `internal/pkg/hash`: Secure password hashing (bcrypt).
+  - `internal/pkg/date`: Testable date provider (injectable `Now()`).
 
-- **Ambiente de desenvolvimento com Docker + Air**  
-  - Hot reload dentro do container
-  - `compose.yaml` e `.build/dev/Dockerfile.dev` já configurados
+- **Ready-to-use Observability (OpenTelemetry)**
+  - Integration in `internal/infra/otel`.
+  - Controlled via `OTEL_ENABLED`.
+  - Application remains functional even if the collector is down.
 
-- **Makefile para rotina diária**  
-  - Subir/parar serviço, ver logs, rodar testes, `go mod tidy`, etc.
+- **Development Environment with Docker + Air**
+  - Hot reload inside the container.
+  - Pre-configured `compose.yaml` and `.build/dev/Dockerfile.dev`.
+
+- **Unified Tooling with Makefile**
+  - Commands for building, testing, proto generation, and more.
 
 ---
 
-## 🚀 Início Rápido
+## 🚀 Quick Start
 
-### Pré-requisitos
+### Prerequisites
 
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
-- (Opcional) [Go 1.21+](https://go.dev/dl/) se quiser rodar fora do Docker
+- (Optional) [Go 1.24+](https://go.dev/dl/)
 
 ---
 
-### 1. Clonar o repositório
+### 1. Clone the repository
 
 ```bash
-git clone <url-do-repo>
+git clone <repo-url>
 cd boilerplate-go
 ```
 
 ---
 
-### 2. Configurar variáveis de ambiente
+### 2. Configure Environment Variables
 
-Crie seu `.env` a partir do exemplo:
+Create your `.env` from the example:
 
 ```bash
 cp .env.example .env
 ```
 
-Edite o `.env` com os valores desejados. Exemplo mínimo:
+Key configuration variables:
 
 ```env
 API_PORT=8080
+GRPC_PORT=9090
 SERVICE_NAME=boilerplate-go
 
-# Observabilidade (opcional)
+# Kafka Configuration
+KAFKA_BROKERS=localhost:9092
+KAFKA_TOPIC=my-topic
+KAFKA_GROUP_ID=my-group
+
+# Observability (optional)
 OTEL_ENABLED=false
-OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-OTEL_SERVICE_NAME=boilerplate-go
-OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,service.environment=local
 ```
-
-> Em desenvolvimento é comum deixar `OTEL_ENABLED=false`.  
-> Em produção você liga e aponta para seu collector.
 
 ---
 
-### 3. Subir o servidor com Docker + Air
+### 3. Generate gRPC Code
 
 ```bash
-docker compose up --build
-# ou, se configurado:
-# make up
+make proto
 ```
-
-A aplicação sobe com hot reload dentro do container.
-
-Acesse:
-
-- API (exemplo de root):  
-  `http://localhost:8080`
-
-*(Você pluga aqui os endpoints da sua aplicação.)*
+*Note: If you don't have protoc installed locally, the CI or a development container should handle this.*
 
 ---
 
-### 4. Ver logs do servidor
+### 4. Run the Services
 
+#### Run the API (HTTP & gRPC)
 ```bash
-docker compose logs -f server
-# ou
-# make server-logs
+make up
+# or
+docker compose up --build server
 ```
 
----
-
-### 5. Rodar localmente sem Docker (opcional)
-
+#### Run the Stream Processor (Kafka Subscriber)
 ```bash
-go mod download
-go run cmd/server/main.go
+docker compose up --build stream
 ```
 
 ---
 
-## ⚙️ Variáveis de ambiente
+## ⚙️ Environment Variables
 
-Carregadas em `internal/application/config/env.go`.
+Defined in `internal/application/config/env.go`.
 
-| Variável                      | Descrição                                           | Default (sugerido)                          |
-| ----------------------------- | --------------------------------------------------- | ------------------------------------------- |
-| `API_PORT`                    | Porta em que o servidor HTTP escuta                | `8080`                                      |
-| `SERVICE_NAME`                | Nome lógico do serviço                             | `boilerplate-go`                            |
-| `OTEL_ENABLED`                | Liga/desliga OTEL (`true` / `false`)               | `false`                                     |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Endpoint OTLP do collector                         | `http://otel-collector:4317` (exemplo)      |
-| `OTEL_SERVICE_NAME`           | Nome do serviço nos traces                         | `boilerplate-go`                            |
-| `OTEL_RESOURCE_ATTRIBUTES`    | Atributos extras de resource do OTEL               | `service.version=1.0.0,service.environment=local` |
-
-Você pode adicionar outras envs de domínio conforme for evoluindo o projeto (DB, Redis, etc.).
+| Variable | Description | Default/Example |
+| :--- | :--- | :--- |
+| `API_PORT` | HTTP server port | `8080` |
+| `GRPC_PORT` | gRPC server port | `9090` |
+| `SERVICE_NAME` | Logical service name | `boilerplate-go` |
+| `KAFKA_BROKERS` | Kafka broker list (comma separated) | `localhost:9092` |
+| `KAFKA_TOPIC` | Topic to subscribe to | `subwatch-messages` |
+| `KAFKA_GROUP_ID` | Consumer group ID | `subwatch-group` |
+| `OTEL_ENABLED` | Enable/Disable OTEL (`true`/`false`) | `false` |
 
 ---
 
-## 📁 Estrutura de Pastas
-
-Visão geral (adaptar para sua estrutura real de microserviço):
+## 📁 Folder Structure
 
 ```text
 boilerplate-go/
-├── .build/
-│   ├── dev/
-│   │   └── Dockerfile.dev      # Ambiente de desenvolvimento (Air, Go, etc.)
-│   └── prod/                   # Dockerfiles de produção (a definir)
+├── api/
+│   ├── proto/               # Protobuf definitions
+│   └── test.http            # REST Specs & snippets
 ├── cmd/
-│   └── server/
-│       └── main.go             # Entrypoint da API
+│   ├── server/
+│   │   └── main.go          # Main entrypoint (HTTP + gRPC)
+│   └── stream/
+│       └── main.go          # Stream entrypoint (Kafka subscriber)
 ├── internal/
-│   ├── api/
-│   │   └── routes.go           # Definição de rotas
-│   ├── application/
-│   ├── infra/
-│   └── pkg/
-│   ├── http/
-│   │   ├── client/             # Clientes HTTP externos (se houver)
-│   │   ├── handlers/           # Handlers HTTP (camada de borda)
-│   │   ├── middlewares/        # Middlewares (logger, recovery, etc.)
-│   │   └── webserver/          # Server HTTP (start/stop, graceful shutdown)
-│   ├── database/               # Interfaces e adapters de banco (ex.: PostgresAdapter)
-│   ├── logger/                 # Implementação concreta do logger
-│   └── otel/                   # Integração com OpenTelemetry
-│   └── pkg/
-│   ├── date/                   # Provider de datas (ex.: Now())
-│   ├── hash/                   # Hash de senha (bcrypt, etc.)
-│   ├── id/                     # Gerador de IDs (UUID)
-├── tmp/                        # Artefatos temporários (binário gerado pelo Air)
-├── .air.toml                   # Configuração do Air (hot reload)
-├── .env                        # Env local (não versionar)
-├── .env.example                # Modelo de env
-├── compose.yaml                # Docker Compose para dev
-├── go.mod
-├── go.sum
-├── Makefile
-└── readme.md
+│   ├── api/                 # API routing and registration
+│   ├── application/         # Use Cases & Business Logic
+│   │   └── config/          # App configuration
+│   ├── domain/              # Entities & Repository Interfaces
+│   ├── infra/               # Infrastructure Adapters
+│   │   ├── grpc/            # gRPC server & generated code
+│   │   ├── http/            # REST webserver, handlers, middlewares
+│   │   ├── kafka/           # Kafka subscriber implementation
+│   │   ├── logger/          # Structured logging implementation
+│   │   └── otel/            # OpenTelemetry integration
+│   └── pkg/                 # Shared utilities (date, hash, id)
+├── Makefile                 # Automation tasks
+└── compose.yaml             # Local development orchestration
 ```
 
 ---
 
-## 🔌 Fluxo de uma requisição (visão conceitual)
-
-```text
-1. [HTTP Request] → Handler em internal/infra/http/handlers
-2. Handler:
-   - valida/parsa entrada
-   - converte para DTO de usecase
-3. Handler chama → UseCase em internal/application/usecases
-4. UseCase:
-   - aplica regra de negócio
-   - chama interfaces de serviços/repos
-5. Implementações concretas em internal/internal/infra/* executam:
-   - chamadas HTTP externas
-   - acesso a banco de dados
-   - logging, tracing, etc.
-6. UseCase retorna DTO de saída
-7. Handler converte para JSON → responde para o cliente
-```
-
-O domínio (`internal/internal/application/domain`) não conhece HTTP, banco, nem nada de infra.
-
----
-
-## 🧾 Logger
-
-Interface de logger no domínio (exemplo):
-
-```go
-type Logger interface {
-    Info(msg string, kv ...any)
-    Warn(msg string, kv ...any)
-    Error(msg string, kv ...any)
-    Debug(msg string, kv ...any)
-}
-```
-
-Implementações concretas podem viver em `internal/infra/logger` e/ou `internal/internal/pkg/logger`, usando `slog`, `zap` etc., mantendo o domínio desacoplado.
-
----
-
-## 📡 Observabilidade (OpenTelemetry)
-
-Quando configurado, a integração com OTEL fica em `internal/infra/otel`.
-
-Pontos chave:
-
-- Controlada por `OTEL_ENABLED`
-- Se não conseguir conectar no collector:
-  - loga o erro
-  - **não impede a aplicação de subir**
-
----
-
-## 🧰 Comandos úteis (Makefile)
+## 🧰 Useful Commands
 
 ```bash
-make up            # Sobe server com Docker Compose
-make down          # Derruba containers
-make server-logs   # Tail nos logs do servidor
-make tidy          # go mod tidy dentro do container
-make test          # go test ./...
+make up            # Start servers with Docker Compose
+make down          # Stop containers
+make proto         # Generate gRPC code from .proto files
+make test          # Run all tests
+make tidy          # Run go mod tidy
 ```
 
 ---
 
-Este boilerplate foi pensado para servir de base para microserviços Go (como o SubWatch) com foco em **claridade de arquitetura**, **testabilidade** e **reutilização** de utilitários em `internal/pkg/`.
+This boilerplate is designed to be the foundation for scalable Go microservices, focusing on **architectural clarity**, **testability**, and **DX**.

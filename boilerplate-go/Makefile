@@ -84,6 +84,15 @@ docs:
 	@sed -i '' '/RightDelim:/d' docs/docs.go
 	@echo "Swagger docs generated at docs/"
 
+.PHONY: proto
+proto:
+	@echo "Generating gRPC code..."
+	@mkdir -p internal/infra/grpc/proto
+	@protoc --go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		api/proto/*.proto
+	@echo "gRPC code generated."
+
 .PHONY: agents
 agents:
 	@bash -c "$$(curl -fsSL https://raw.githubusercontent.com/joaopdmota/antigravity-setup/main/scripts/sync-agents.sh)"

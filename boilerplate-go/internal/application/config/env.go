@@ -8,8 +8,12 @@ import (
 
 type ConfigMap struct {
 	ApiPort                 int
+	GRPCPort                int
 	ServiceName             string
 	OtelEnabled             bool
+	KafkaBrokers            string
+	KafkaTopic              string
+	KafkaGroupID            string
 }
 
 var Config *ConfigMap
@@ -21,8 +25,12 @@ func LoadEnvs() *ConfigMap {
 
 	Config = &ConfigMap{
 		ApiPort:                 GetEnvNumber("API_PORT"),
+		GRPCPort:                GetEnvNumber("GRPC_PORT"),
 		ServiceName:             GetEnvString("SERVICE_NAME"),
 		OtelEnabled:             GetEnvBool("OTEL_ENABLED", false),
+		KafkaBrokers:            GetEnvString("KAFKA_BROKERS"),
+		KafkaTopic:              GetEnvString("KAFKA_TOPIC"),
+		KafkaGroupID:            GetEnvString("KAFKA_GROUP_ID"),
 	}
 
 	return Config

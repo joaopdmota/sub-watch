@@ -8,12 +8,20 @@ import (
 
 func setupEnvVars() {
 	os.Setenv("API_PORT", "8080")
+	os.Setenv("GRPC_PORT", "9090")
 	os.Setenv("SERVICE_NAME", "test-service")
+	os.Setenv("KAFKA_BROKERS", "localhost:9092")
+	os.Setenv("KAFKA_TOPIC", "test-topic")
+	os.Setenv("KAFKA_GROUP_ID", "test-group")
 }
 
 func clearEnvVars() {
 	os.Unsetenv("API_PORT")
+	os.Unsetenv("GRPC_PORT")
 	os.Unsetenv("SERVICE_NAME")
+	os.Unsetenv("KAFKA_BROKERS")
+	os.Unsetenv("KAFKA_TOPIC")
+	os.Unsetenv("KAFKA_GROUP_ID")
 }
 
 func TestLoadEnvs(t *testing.T) {

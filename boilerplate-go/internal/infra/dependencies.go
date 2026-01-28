@@ -1,4 +1,4 @@
-package application
+package infra
 
 import (
 	"boilerplate-go/internal/application/config"

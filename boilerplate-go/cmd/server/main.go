@@ -2,15 +2,18 @@ package main
 
 import (
 	"boilerplate-go/internal/api"
-	"boilerplate-go/internal/application"
 	"boilerplate-go/internal/application/config"
+	"boilerplate-go/internal/infra"
+	"boilerplate-go/internal/infra/grpc"
 	"boilerplate-go/internal/infra/logger"
 	"boilerplate-go/internal/infra/otel"
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 )
 
 func main() {
@@ -26,16 +29,27 @@ func main() {
 	}
 	defer shutdownOtel()
 
-	httpService := application.InitializeDependencies(envs)
+	httpService := infra.InitializeDependencies(envs)
 	api.RegisterRoutes(httpService)
+
+	grpcService := grpc.NewGRPCService(strconv.Itoa(envs.GRPCPort))
 
 	go func() {
 		if err := httpService.Start(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Error starting the server: %v", err)
+			log.Fatalf("Error starting the HTTP server: %v", err)
+		}
+	}()
+
+	go func() {
+		if err := grpcService.Start(); err != nil {
+			log.Fatalf("Error starting the gRPC server: %v", err)
 		}
 	}()
 
 	<-ctx.Done()
+	fmt.Println("Shutting down servers...")
+
+	grpcService.Stop()
 
 	if err := httpService.Stop(context.Background()); err != nil {
 		log.Fatalf("Error stopping the server: %v", err)
