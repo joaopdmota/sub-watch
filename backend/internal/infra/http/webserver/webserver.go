@@ -1,0 +1,68 @@
+package webserver
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"sub-watch-backend/internal/infra/http/middlewares"
+
+	"github.com/labstack/echo/v4"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+)
+
+type HTTPService struct {
+	server *http.Server
+	echo   *echo.Echo
+}
+
+func NewHTTPService(port string, serviceName string) *HTTPService {
+    e := echo.New()
+
+    e.Use(middlewares.Logger())
+    e.Use(otelecho.Middleware(serviceName))
+
+    server := &http.Server{
+        Addr:    ":" + port,
+        Handler: e,
+    }
+
+    return &HTTPService{
+        server: server,
+        echo:   e,
+    }
+}
+
+func (s *HTTPService) Group(prefix string) *echo.Group {
+	return s.echo.Group(prefix)
+}
+
+func (s *HTTPService) AddRoute(method, pattern string, handler echo.HandlerFunc) {
+	switch method {
+	case http.MethodGet:
+		s.echo.GET(pattern, handler)
+	case http.MethodPost:
+		s.echo.POST(pattern, handler)
+	case http.MethodPut:
+		s.echo.PUT(pattern, handler)
+	case http.MethodDelete:
+		s.echo.DELETE(pattern, handler)
+	default:
+		s.echo.Any(pattern, func(c echo.Context) error {
+			return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Sprintf("Method %s not allowed", method))
+		})
+	}
+}
+
+func (s *HTTPService) Start() error {
+	fmt.Printf("Server running on port %s...\n", s.server.Addr)
+	return s.echo.StartServer(s.server)
+}
+
+func (s *HTTPService) Stop(ctx context.Context) error {
+	fmt.Println("Stopping server...")
+	return s.server.Shutdown(ctx)
+}
+
+func (s *HTTPService) Echo() *echo.Echo {
+	return s.echo
+}
