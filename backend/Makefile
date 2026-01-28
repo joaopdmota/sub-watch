@@ -92,7 +92,7 @@ psql:
 .PHONY: migrate-up
 migrate-up:
 	@echo "Running migrations..."
-	@for file in infra/database/migrations/*.up.sql; do \
+	@for file in internal/infra/database/migrations/*.up.sql; do \
 		echo "Applying $$file..."; \
 		cat $$file | docker compose exec -T postgres psql -U $(DB_USER) -d $(DB_NAME); \
 	done
@@ -101,7 +101,7 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	@echo "Running migrations..."
-	@for file in infra/database/migrations/*.down.sql; do \
+	@for file in internal/infra/database/migrations/*.down.sql; do \
 		echo "Applying $$file..."; \
 		cat $$file | docker compose exec -T postgres psql -U $(DB_USER) -d $(DB_NAME); \
 	done
@@ -110,7 +110,7 @@ migrate-down:
 .PHONY: seed
 seed:
 	@echo "Seeding database..."
-	@for file in infra/database/seeds/*.sql; do \
+	@for file in internal/infra/database/seeds/*.sql; do \
 		echo "Applying $$file..."; \
 		cat $$file | docker compose exec -T postgres psql -U $(DB_USER) -d $(DB_NAME); \
 	done
