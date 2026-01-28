@@ -1,17 +1,19 @@
 package config_test
 
 import (
-	"boilerplate-go/application/config"
+	"boilerplate-go/internal/application/config"
 	"os"
 	"testing"
 )
 
 func setupEnvVars() {
 	os.Setenv("API_PORT", "8080")
+	os.Setenv("SERVICE_NAME", "test-service")
 }
 
 func clearEnvVars() {
 	os.Unsetenv("API_PORT")
+	os.Unsetenv("SERVICE_NAME")
 }
 
 func TestLoadEnvs(t *testing.T) {

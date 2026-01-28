@@ -1,10 +1,11 @@
 package main
 
 import (
-	"boilerplate-go/application"
-	"boilerplate-go/application/config"
-	"boilerplate-go/infra/logger"
-	"boilerplate-go/infra/otel"
+	"boilerplate-go/internal/api"
+	"boilerplate-go/internal/application"
+	"boilerplate-go/internal/application/config"
+	"boilerplate-go/internal/infra/logger"
+	"boilerplate-go/internal/infra/otel"
 	"context"
 	"log"
 	"net/http"
@@ -26,6 +27,7 @@ func main() {
 	defer shutdownOtel()
 
 	httpService := application.InitializeDependencies(envs)
+	api.RegisterRoutes(httpService)
 
 	go func() {
 		if err := httpService.Start(); err != nil && err != http.ErrServerClosed {

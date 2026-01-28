@@ -7,28 +7,28 @@ Backend em Go pensado para você **subir uma API rápido** sem abrir mão de boa
 ## ✨ Funcionalidades
 
 - **Arquitetura limpa**  
-  - Separação clara entre `cmd`, `application`, `domain`, `infra` e `pkg`
+  - Separação clara entre `cmd`, `internal/application`, `internal/domain`, `internal/infra` e `internal/pkg`
   - Fácil de testar, manter e evoluir
 
 - **Servidor HTTP desacoplado**  
-  - Camada HTTP isolada em `infra/http` (router, handlers, middlewares, webserver)
-  - `application` e `domain` não sabem nada de HTTP
+  - Camada HTTP isolada em `internal/infra/http` (router, handlers, middlewares, webserver)
+  - `internal/application` e `internal/domain` não sabem nada de HTTP
 
 - **Config centralizada**  
-  - Leitura e validação de envs em `application/config/env.go`
+  - Leitura e validação de envs em `internal/application/config/env.go`
 
 - **Logger estruturado**  
-  - Interface de logger no domínio (ex.: via `pkg/logger`)
-  - Implementação concreta em `infra/logger` (quando aplicável)
+  - Interface de logger no domínio (ex.: via `internal/internal/pkg/logger`)
+  - Implementação concreta em `internal/infra/logger` (quando aplicável)
 
-- **Providers reutilizáveis em `pkg/`**  
-  - `pkg/id`: geração de IDs (UUID)
-  - `pkg/hash`: hashing seguro de senha (bcrypt)
-  - `pkg/date`: provider de datas testável (`Now()` injetável)
-  - `pkg/logger`: abstração de logger reutilizável entre serviços
+- **Providers reutilizáveis em `internal/pkg/`**  
+  - `internal/pkg/id`: geração de IDs (UUID)
+  - `internal/pkg/hash`: hashing seguro de senha (bcrypt)
+  - `internal/pkg/date`: provider de datas testável (`Now()` injetável)
+  - `internal/internal/pkg/logger`: abstração de logger reutilizável entre serviços
 
 - **OpenTelemetry pronto para uso (mas opcional)**  
-  - Integração em `infra/otel` (quando configurado)
+  - Integração em `internal/infra/otel` (quando configurado)
   - Controle via `OTEL_ENABLED`
   - Se o collector estiver fora do ar, a app **continua funcionando**
 
@@ -126,7 +126,7 @@ go run cmd/server/main.go
 
 ## ⚙️ Variáveis de ambiente
 
-Carregadas em `application/config/env.go`.
+Carregadas em `internal/application/config/env.go`.
 
 | Variável                      | Descrição                                           | Default (sugerido)                          |
 | ----------------------------- | --------------------------------------------------- | ------------------------------------------- |
@@ -151,17 +151,15 @@ boilerplate-go/
 │   ├── dev/
 │   │   └── Dockerfile.dev      # Ambiente de desenvolvimento (Air, Go, etc.)
 │   └── prod/                   # Dockerfiles de produção (a definir)
-├── application/
-│   ├── config/
-│   │   ├── env.go              # Carregamento de envs
-│   │   └── env_test.go
-│   ├── domain/                 # Entidades e regras de negócio puras
-│   └── usecases/               # Casos de uso da aplicação
-│   └── logger.go               # Abstrações de logger
 ├── cmd/
 │   └── server/
 │       └── main.go             # Entrypoint da API
-├── infra/
+├── internal/
+│   ├── api/
+│   │   └── routes.go           # Definição de rotas
+│   ├── application/
+│   ├── infra/
+│   └── pkg/
 │   ├── http/
 │   │   ├── client/             # Clientes HTTP externos (se houver)
 │   │   ├── handlers/           # Handlers HTTP (camada de borda)
@@ -170,7 +168,7 @@ boilerplate-go/
 │   ├── database/               # Interfaces e adapters de banco (ex.: PostgresAdapter)
 │   ├── logger/                 # Implementação concreta do logger
 │   └── otel/                   # Integração com OpenTelemetry
-├── pkg/
+│   └── pkg/
 │   ├── date/                   # Provider de datas (ex.: Now())
 │   ├── hash/                   # Hash de senha (bcrypt, etc.)
 │   ├── id/                     # Gerador de IDs (UUID)
@@ -190,15 +188,15 @@ boilerplate-go/
 ## 🔌 Fluxo de uma requisição (visão conceitual)
 
 ```text
-1. [HTTP Request] → Handler em infra/http/handlers
+1. [HTTP Request] → Handler em internal/infra/http/handlers
 2. Handler:
    - valida/parsa entrada
    - converte para DTO de usecase
-3. Handler chama → UseCase em application/usecases
+3. Handler chama → UseCase em internal/application/usecases
 4. UseCase:
    - aplica regra de negócio
    - chama interfaces de serviços/repos
-5. Implementações concretas em infra/* executam:
+5. Implementações concretas em internal/internal/infra/* executam:
    - chamadas HTTP externas
    - acesso a banco de dados
    - logging, tracing, etc.
@@ -206,7 +204,7 @@ boilerplate-go/
 7. Handler converte para JSON → responde para o cliente
 ```
 
-O domínio (`application/domain`) não conhece HTTP, banco, nem nada de infra.
+O domínio (`internal/internal/application/domain`) não conhece HTTP, banco, nem nada de infra.
 
 ---
 
@@ -223,13 +221,13 @@ type Logger interface {
 }
 ```
 
-Implementações concretas podem viver em `infra/logger` e/ou `pkg/logger`, usando `slog`, `zap` etc., mantendo o domínio desacoplado.
+Implementações concretas podem viver em `internal/infra/logger` e/ou `internal/internal/pkg/logger`, usando `slog`, `zap` etc., mantendo o domínio desacoplado.
 
 ---
 
 ## 📡 Observabilidade (OpenTelemetry)
 
-Quando configurado, a integração com OTEL fica em `infra/otel`.
+Quando configurado, a integração com OTEL fica em `internal/infra/otel`.
 
 Pontos chave:
 
@@ -252,4 +250,4 @@ make test          # go test ./...
 
 ---
 
-Este boilerplate foi pensado para servir de base para microserviços Go (como o SubWatch) com foco em **claridade de arquitetura**, **testabilidade** e **reutilização** de utilitários em `pkg/`.
+Este boilerplate foi pensado para servir de base para microserviços Go (como o SubWatch) com foco em **claridade de arquitetura**, **testabilidade** e **reutilização** de utilitários em `internal/pkg/`.

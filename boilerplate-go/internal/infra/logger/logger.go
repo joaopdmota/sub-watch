@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"boilerplate-go/application"
+	"boilerplate-go/internal/application"
 	"log/slog"
 	"os"
 )

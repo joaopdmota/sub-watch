@@ -83,3 +83,7 @@ docs:
 	@sed -i '' '/LeftDelim:/d' docs/docs.go
 	@sed -i '' '/RightDelim:/d' docs/docs.go
 	@echo "Swagger docs generated at docs/"
+
+.PHONY: agents
+agents:
+	@bash -c "$$(curl -fsSL https://raw.githubusercontent.com/joaopdmota/antigravity-setup/main/scripts/sync-agents.sh)"

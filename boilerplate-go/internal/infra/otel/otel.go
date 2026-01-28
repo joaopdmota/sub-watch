@@ -1,7 +1,7 @@
 package otel
 
 import (
-	"boilerplate-go/application"
+	"boilerplate-go/internal/application"
 	"context"
 	"os"
 	"time"

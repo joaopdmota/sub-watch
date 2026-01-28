@@ -1,7 +1,7 @@
 package webserver_test
 
 import (
-	"boilerplate-go/infra/http/webserver"
+	"boilerplate-go/internal/infra/http/webserver"
 	"io"
 	"net/http"
 	"net/http/httptest" // Corrected import path

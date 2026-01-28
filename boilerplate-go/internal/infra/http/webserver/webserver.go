@@ -1,7 +1,7 @@
 package webserver
 
 import (
-	"boilerplate-go/infra/http/middlewares"
+	"boilerplate-go/internal/infra/http/middlewares"
 	"context"
 	"fmt"
 	"net/http"
