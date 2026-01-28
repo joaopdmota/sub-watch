@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sub-watch-backend/application/config"
-	app_init "sub-watch-backend/application/initialization"
-	"sub-watch-backend/infra/logger"
-	"sub-watch-backend/infra/otel"
+	"sub-watch-backend/internal/application/config"
+	infra_init "sub-watch-backend/internal/infra/init"
+	"sub-watch-backend/internal/infra/logger"
+	"sub-watch-backend/internal/infra/otel"
 
 	_ "sub-watch-backend/docs"
 )
@@ -28,7 +28,6 @@ import (
 
 // @host      localhost:8080
 // @BasePath  /
-
 	func main() {
 		envs := config.LoadEnvs()
 		logger := logger.New()
@@ -42,7 +41,7 @@ import (
 		}
 		defer shutdownOtel()
 
-		httpService := app_init.InitializeDependencies(envs)
+		httpService := infra_init.InitializeDependencies(envs, logger)
 
 		go func() {
 			if err := httpService.Start(); err != nil && err != http.ErrServerClosed {
