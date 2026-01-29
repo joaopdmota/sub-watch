@@ -1,13 +1,12 @@
-package api
+package http_infra
 
 import (
-	http_infra "boilerplate-go/internal/infra/http"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
-func RegisterRoutes(httpService *http_infra.HTTPService) {
+func RegisterRoutes(httpService *HTTPService) {
 	httpService.AddRoute(http.MethodGet, "/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})

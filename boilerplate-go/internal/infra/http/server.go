@@ -1,4 +1,4 @@
-package webserver
+package http_infra
 
 import (
 	"boilerplate-go/internal/infra/http/middlewares"
@@ -19,6 +19,7 @@ func NewHTTPService(port string, serviceName string) *HTTPService {
     e := echo.New()
 
     e.Use(middlewares.Logger())
+    e.Use(middlewares.RequestID())
     e.Use(otelecho.Middleware(serviceName))
 
     server := &http.Server{
@@ -31,7 +32,6 @@ func NewHTTPService(port string, serviceName string) *HTTPService {
         echo:   e,
     }
 }
-
 
 func (s *HTTPService) AddRoute(method, pattern string, handler echo.HandlerFunc) {
 	switch method {

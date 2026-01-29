@@ -1,10 +1,10 @@
 package main
 
 import (
-	"boilerplate-go/internal/api"
 	"boilerplate-go/internal/application/config"
 	"boilerplate-go/internal/infra"
 	"boilerplate-go/internal/infra/grpc"
+	http_infra "boilerplate-go/internal/infra/http"
 	"boilerplate-go/internal/infra/logger"
 	"boilerplate-go/internal/infra/otel"
 	"context"
@@ -30,7 +30,7 @@ func main() {
 	defer shutdownOtel()
 
 	httpService := infra.InitializeDependencies(envs)
-	api.RegisterRoutes(httpService)
+	http_infra.RegisterRoutes(httpService)
 
 	grpcService := grpc.NewGRPCService(strconv.Itoa(envs.GRPCPort))
 
